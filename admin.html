@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการระบบ Admin - Grow Up Study</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Grow Up Study <span style="color:var(--color-secondary); font-size:1rem;">(Admin)</span></a>
+            <div class="nav-links" id="auth-nav"></div>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 40px 0; flex: 1; max-width: 800px;">
+        <h2 class="mb-4">จัดการเนื้อหา (Admin Panel)</h2>
+        
+        <!-- Change Password -->
+        <div class="card mb-4" style="border-top: 4px solid #34495e;">
+            <h3>🔒 เปลี่ยนรหัสผ่านแอดมิน</h3>
+            <form id="change-pwd-form" class="mt-2">
+                <div class="form-group">
+                    <label>รหัสผ่านเดิม</label>
+                    <input type="password" id="pwd-old" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>รหัสผ่านใหม่</label>
+                    <input type="password" id="pwd-new" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background:#34495e; border:none;">เปลี่ยนรหัสผ่าน</button>
+            </form>
+        </div>
+
+        <!-- Create Course -->
+        <div class="card mb-4" style="border-top: 4px solid #2ecc71;">
+            <h3>➕ สร้างคอร์สเรียนใหม่</h3>
+            <form id="add-course-form" class="mt-2">
+                <div class="form-group">
+                    <label>ชื่อคอร์ส</label>
+                    <input type="text" id="c-title" class="form-control" placeholder="เช่น ฟิสิกส์ ม.5" required>
+                </div>
+                <div class="form-group">
+                    <label>รายละเอียดคอร์ส</label>
+                    <textarea id="c-desc" class="form-control" rows="2" placeholder="อธิบายสั้นๆ" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>อายุคอร์ส (วัน) *ปล่อยว่างถ้าให้เรียนได้ตลอดชีพ</label>
+                    <input type="number" id="c-duration" class="form-control" placeholder="เช่น 30">
+                </div>
+                <button type="submit" class="btn btn-primary" style="background:#2ecc71; border:none;">สร้างคอร์ส</button>
+            </form>
+        </div>
+
+        <div class="card mb-4" style="border-top: 4px solid var(--color-primary);">
+            <h3>เพิ่มวิดีโอ (YouTube)</h3>
+            <form id="add-video-form" class="mt-2">
+                <div class="form-group">
+                    <label>เลือกคอร์ส</label>
+                    <select id="v-courseId" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>ชื่อบทเรียน / วิดีโอ</label>
+                    <input type="text" id="v-title" class="form-control" placeholder="เช่น Ep.4 - กฎของนิวตัน" required>
+                </div>
+                <div class="form-group">
+                    <label>รหัส YouTube (Video ID)</label>
+                    <input type="text" id="v-videoId" class="form-control" placeholder="เช่น dQw4w9WgXcQ" required>
+                </div>
+                <div class="form-group">
+                    <label>ลิงก์เอกสารประกอบการเรียน (ถ้ามี)</label>
+                    <input type="text" id="v-documentUrl" class="form-control" placeholder="เช่น ลิงก์ Google Drive หรือ PDF">
+                </div>
+                <button type="submit" class="btn btn-primary">เพิ่มวิดีโอ</button>
+            </form>
+        </div>
+
+        <div class="card mb-4" style="border-top: 4px solid var(--color-secondary);">
+            <h3>เพิ่มโปรแกรมจำลอง (Simulation)</h3>
+            <form id="add-sim-form" class="mt-2">
+                <div class="form-group">
+                    <label>เลือกคอร์ส</label>
+                    <select id="s-courseId" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>ชื่อโปรแกรมจำลอง</label>
+                    <input type="text" id="s-title" class="form-control" placeholder="เช่น จำลองแรงเสียดทาน" required>
+                </div>
+                <div class="form-group">
+                    <label>ที่อยู่ไฟล์ (File URL)</label>
+                    <input type="text" id="s-fileUrl" class="form-control" value="simulations/" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background:var(--color-secondary);">เพิ่มจำลอง</button>
+            </form>
+        </div>
+        
+        <div class="card mb-4" style="border-top: 4px solid #f39c12;">
+            <h3>คำขอลงทะเบียนเรียน (Pending Enrollments)</h3>
+            <div id="pending-list" class="mt-2">
+                <p class="text-muted">กำลังโหลด...</p>
+            </div>
+        </div>
+
+        <!-- Manage Content -->
+        <div class="card mb-4" style="border-top: 4px solid #16a085;">
+            <h3>จัดการเนื้อหา (Edit / Delete)</h3>
+            <div id="content-manage-list" class="mt-2"></div>
+        </div>
+
+        <!-- Manage Active -->
+        <div class="card mb-4" style="border-top: 4px solid #e74c3c;">
+            <h3>จัดการการเข้าถึงคอร์ส (Active Enrollments)</h3>
+            <div id="active-list" class="mt-2"></div>
+        </div>
+
+        <!-- Manage Users -->
+        <div class="card mb-4" style="border-top: 4px solid #9b59b6;">
+            <h3>จัดการผู้ใช้งานระบบ</h3>
+            <div id="users-list" class="mt-2"></div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        async function fetchPendingEnrollments() {
+            try {
+                const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    renderPending(data);
+                }
+            } catch(e) {}
+        }
+
+        function renderPending(list) {
+            const container = document.getElementById('pending-list');
+            if (list.length === 0) {
+                container.innerHTML = '<p class="text-muted" style="margin-top: 15px;">ไม่มีคำขอลงทะเบียนที่รออนุมัติ</p>';
+                return;
+            }
+            let html = '<ul style="list-style: none; padding: 0; margin-top: 15px;">';
+            list.forEach(item => {
+                html += `
+                    <li style="display:flex; justify-content:space-between; align-items:center; padding: 15px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 10px; background: rgba(0,0,0,0.2);">
+                        <span>👤 <b>${item.username}</b> ขอเข้าเรียน <b>${item.courseTitle}</b></span>
+                        <button onclick="approveEnrollment(${item.id})" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.9rem; background: #27ae60;">✅ อนุมัติ</button>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        window.approveEnrollment = async function(id) {
+            if(!confirm('ยืนยันการอนุมัติ?')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/enrollments/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
+                if (res.ok) {
+                    alert('อนุมัติสำเร็จ');
+                    fetchPendingEnrollments();
+                    fetchActiveEnrollments();
+                }
+            } catch(e) {}
+        };
+
+        async function fetchActiveEnrollments() {
+            try {
+                const res = await fetch(`${API_URL}/admin/enrollments/active`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    const c = document.getElementById('active-list');
+                    if (data.length === 0) { c.innerHTML = '<p class="text-muted">ไม่มีผู้เรียนในขณะนี้</p>'; return; }
+                    let html = '<ul style="list-style:none; padding:0;">';
+                    data.forEach(i => {
+                        const exp = i.expires_at ? new Date(i.expires_at).toLocaleDateString() : 'ตลอดชีพ';
+                        html += `
+                            <li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <span>👤 ${i.username} - 📚 ${i.courseTitle} <small style="color:#aaa;">(หมดอายุ: ${exp})</small></span>
+                                <button onclick="revokeAccess(${i.id})" class="btn btn-primary" style="background:#e74c3c; border:none; padding:5px 10px;">❌ ดึงสิทธิ์คืน</button>
+                            </li>
+                        `;
+                    });
+                    c.innerHTML = html + '</ul>';
+                }
+            } catch(e) {}
+        }
+
+        window.revokeAccess = async function(id) {
+            if(!confirm('ยืนยันดึงสิทธิ์การเรียนคืน?')) return;
+            try {
+                await fetch(`${API_URL}/admin/enrollments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                fetchActiveEnrollments();
+            } catch(e) {}
+        }
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    const c = document.getElementById('users-list');
+                    let html = '<ul style="list-style:none; padding:0;">';
+                    data.forEach(u => {
+                        html += `
+                            <li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <span>👤 ${u.username}</span>
+                                <select onchange="changeRole(${u.id}, this.value)" style="padding:5px; border-radius:5px; background:rgba(0,0,0,0.5); color:white; border:none;">
+                                    <option value="student" ${u.role==='student'?'selected':''}>Student</option>
+                                    <option value="teacher" ${u.role==='teacher'?'selected':''}>Teacher</option>
+                                    <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                                </select>
+                            </li>
+                        `;
+                    });
+                    c.innerHTML = html + '</ul>';
+                }
+            } catch(e) {}
+        }
+
+        window.changeRole = async function(id, role) {
+            try {
+                await fetch(`${API_URL}/admin/users/${id}/role`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ role }) });
+                alert('อัปเดตสิทธิ์สำเร็จ');
+            } catch(e) {}
+        }
+
+        function renderContentManage() {
+            const container = document.getElementById('content-manage-list');
+            if (courses.length === 0) {
+                container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์สเรียน</p>';
+                return;
+            }
+            let html = '';
+            courses.forEach(c => {
+                html += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #16a085;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                            <h4 style="margin:0; color:#1abc9c;">📚 ${c.title}</h4>
+                            <div>
+                                <button onclick="editCourse(${c.id})" class="btn btn-outline" style="padding: 3px 8px; font-size: 0.8rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
+                                <button onclick="deleteCourse(${c.id})" class="btn btn-outline" style="padding: 3px 8px; font-size: 0.8rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9rem; margin-bottom:10px;">${c.description}</p>
+                        
+                        <div style="padding-left: 20px; border-left: 2px dashed rgba(255,255,255,0.1);">
+                            <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 5px;">วิดีโอ (${c.lessons ? c.lessons.length : 0})</p>
+                `;
+                if(c.lessons) {
+                    c.lessons.forEach(l => {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px; font-size:0.9rem;">
+                                <span>▶️ ${l.title}</span>
+                                <div>
+                                    <button onclick="editLesson(${l.id}, ${c.id})" class="btn btn-outline" style="padding: 2px 5px; font-size: 0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
+                                    <button onclick="deleteLesson(${l.id})" class="btn btn-outline" style="padding: 2px 5px; font-size: 0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += `
+                            <p style="font-size: 0.85rem; color: #aaa; margin-top:10px; margin-bottom: 5px;">โปรแกรมจำลอง (${c.simulations ? c.simulations.length : 0})</p>
+                `;
+                if(c.simulations) {
+                    c.simulations.forEach(s => {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px; font-size:0.9rem;">
+                                <span>🖥️ ${s.title}</span>
+                                <div>
+                                    <button onclick="editSim(${s.id}, ${c.id})" class="btn btn-outline" style="padding: 2px 5px; font-size: 0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
+                                    <button onclick="deleteSim(${s.id})" class="btn btn-outline" style="padding: 2px 5px; font-size: 0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.editCourse = async function(id) {
+            const course = courses.find(c => c.id === id);
+            const title = prompt('ชื่อคอร์ส:', course.title);
+            if(title === null) return;
+            const description = prompt('รายละเอียด:', course.description);
+            if(description === null) return;
+            const durationDays = prompt('อายุคอร์ส (วัน):', course.duration_days || '');
+            if(durationDays === null) return;
+
+            try {
+                await fetch(`${API_URL}/courses/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, description, durationDays })
+                });
+                fetchCourses();
+            } catch(e) {}
+        }
+
+        window.deleteCourse = async function(id) {
+            if(!confirm('คำเตือน: การลบคอร์สจะลบเนื้อหาและนักเรียนที่ลงเรียนทั้งหมด! ยืนยันหรือไม่?')) return;
+            try { await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); } catch(e) {}
+        }
+
+        window.editLesson = async function(id, cId) {
+            const course = courses.find(c => c.id === cId);
+            const lesson = course.lessons.find(l => l.id === id);
+            const title = prompt('ชื่อวิดีโอ:', lesson.title);
+            if(title === null) return;
+            const videoId = prompt('รหัส YouTube:', lesson.video_id);
+            if(videoId === null) return;
+            const documentUrl = prompt('ลิงก์ชีทเรียน (เว้นว่างได้):', lesson.document_url || '');
+            if(documentUrl === null) return;
+
+            try {
+                await fetch(`${API_URL}/lessons/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, videoId, documentUrl })
+                });
+                fetchCourses();
+            } catch(e) {}
+        }
+
+        window.deleteLesson = async function(id) {
+            if(!confirm('ลบวิดีโอนี้?')) return;
+            try { await fetch(`${API_URL}/lessons/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); } catch(e) {}
+        }
+
+        window.editSim = async function(id, cId) {
+            const course = courses.find(c => c.id === cId);
+            const sim = course.simulations.find(s => s.id === id);
+            const title = prompt('ชื่อโปรแกรมจำลอง:', sim.title);
+            if(title === null) return;
+            const fileUrl = prompt('URL ไฟล์:', sim.file_url);
+            if(fileUrl === null) return;
+
+            try {
+                await fetch(`${API_URL}/simulations/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, fileUrl })
+                });
+                fetchCourses();
+            } catch(e) {}
+        }
+
+        window.deleteSim = async function(id) {
+            if(!confirm('ลบโปรแกรมจำลองนี้?')) return;
+            try { await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); } catch(e) {}
+        }
+
+        function initAdmin() {
+            const vSelect = document.getElementById('v-courseId');
+            const sSelect = document.getElementById('s-courseId');
+            
+            let options = '';
+            courses.forEach(c => {
+                options += `<option value="${c.id}">${c.title}</option>`;
+            });
+            
+            vSelect.innerHTML = options;
+            sSelect.innerHTML = options;
+            
+            renderContentManage();
+        }
+
+        document.addEventListener('coursesLoaded', initAdmin);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (courses.length > 0) initAdmin();
+            fetchPendingEnrollments();
+            fetchActiveEnrollments();
+            fetchUsers();
+
+            document.getElementById('add-course-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('c-title').value;
+                const description = document.getElementById('c-desc').value;
+                const durationDays = document.getElementById('c-duration').value;
+                
+                try {
+                    const res = await fetch(`${API_URL}/courses`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ title, description, durationDays })
+                    });
+                    if (res.ok) {
+                        alert('สร้างคอร์สสำเร็จ!');
+                        e.target.reset();
+                        fetchCourses(); 
+                    }
+                } catch(err) {}
+            });
+
+            document.getElementById('change-pwd-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const oldPassword = document.getElementById('pwd-old').value;
+                const newPassword = document.getElementById('pwd-new').value;
+                
+                try {
+                    const res = await fetch(`${API_URL}/admin/password`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ oldPassword, newPassword })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert('เปลี่ยนรหัสผ่านสำเร็จ!');
+                        e.target.reset();
+                    } else {
+                        alert(data.error || 'เกิดข้อผิดพลาด');
+                    }
+                } catch(err) {}
+            });
+
+            // Handle add video
+            document.getElementById('add-video-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cId = parseInt(document.getElementById('v-courseId').value);
+                const title = document.getElementById('v-title').value;
+                const videoId = document.getElementById('v-videoId').value;
+                const documentUrl = document.getElementById('v-documentUrl').value;
+                
+                try {
+                    const res = await fetch(`${API_URL}/courses/${cId}/lessons`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ title, videoId, documentUrl })
+                    });
+                    if (res.ok) {
+                        alert('เพิ่มวิดีโอสำเร็จ!');
+                        e.target.reset();
+                        fetchCourses(); // refresh data
+                    }
+                } catch(err) {}
+            });
+
+            // Handle add sim
+            document.getElementById('add-sim-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cId = parseInt(document.getElementById('s-courseId').value);
+                const title = document.getElementById('s-title').value;
+                const fileUrl = document.getElementById('s-fileUrl').value;
+                
+                try {
+                    const res = await fetch(`${API_URL}/courses/${cId}/simulations`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ title, fileUrl })
+                    });
+                    if (res.ok) {
+                        alert('เพิ่มโปรแกรมจำลองสำเร็จ!');
+                        e.target.reset();
+                        fetchCourses(); // refresh data
+                    }
+                } catch(err) {}
+            });
+        });
+    </script>
+</body>
+</html>

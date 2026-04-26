@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - Grow Up Study</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 40px 20px;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+        }
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .toggle-text a {
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Grow Up Study</a>
+        </div>
+    </header>
+
+    <main class="auth-container">
+        <div class="card auth-card" id="login-section">
+            <h2 class="text-center mb-4">เข้าสู่ระบบ</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">ชื่อผู้ใช้</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="กรอกชื่อผู้ใช้" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">รหัสผ่าน</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="กรอกรหัสผ่าน" required>
+                </div>
+                <div class="form-group" style="display: flex; gap: 20px;">
+                    <label><input type="radio" name="login-role" value="student" checked> นร.</label>
+                    <label><input type="radio" name="login-role" value="teacher"> ครู</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ</button>
+            </form>
+            <p class="toggle-text">ยังไม่มีบัญชีใช่ไหม? <a onclick="toggleAuth('register')">สมัครสมาชิกเลย</a></p>
+        </div>
+
+        <div class="card auth-card" id="register-section" style="display: none;">
+            <h2 class="text-center mb-4">สมัครสมาชิก</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-username">ชื่อผู้ใช้</label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="ตั้งชื่อผู้ใช้" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">รหัสผ่าน</label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="ตั้งรหัสผ่าน" required>
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
+                    <label><input type="radio" name="reg-role" value="student" checked> สมัครเป็นนักเรียน (วิดีโอ + ซิม)</label>
+                    <label><input type="radio" name="reg-role" value="teacher"> สมัครเป็นคุณครู (เฉพาะซิมูเลชัน)</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">สมัครสมาชิกฟรี</button>
+            </form>
+            <p class="toggle-text">มีบัญชีอยู่แล้ว? <a onclick="toggleAuth('login')">เข้าสู่ระบบ</a></p>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        function toggleAuth(type) {
+            if (type === 'register') {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('register-section').style.display = 'block';
+            } else {
+                document.getElementById('register-section').style.display = 'none';
+                document.getElementById('login-section').style.display = 'block';
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            if(username.trim() !== '' && password.trim() !== '') {
+                const success = await login(username, password);
+                if(success) {
+                    const role = getCurrentUser().role;
+                    window.location.href = role === 'teacher' ? 'teacher-dashboard.html' : 'courses.html';
+                }
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const role = document.querySelector('input[name="reg-role"]:checked').value;
+            if(username.trim() !== '' && password.trim() !== '') {
+                const success = await register(username, password, role);
+                if(success) {
+                    window.location.href = role === 'teacher' ? 'teacher-dashboard.html' : 'courses.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

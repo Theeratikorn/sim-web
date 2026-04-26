@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมจำลอง: การตกอย่างอิสระ</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #2c3e50; color: white; text-align: center; }
+        .container { height: 300px; width: 100px; border: 2px dashed #7f8c8d; margin: 20px auto; position: relative; }
+        .ball { width: 30px; height: 30px; background-color: #e74c3c; border-radius: 50%; position: absolute; left: 35px; top: 0; }
+        button { padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>จำลองการตกอย่างอิสระ (Free Fall)</h2>
+    <div class="container">
+        <div class="ball" id="ball"></div>
+    </div>
+    <button onclick="drop()">ปล่อยลูกบอล</button>
+    <button onclick="reset()">รีเซ็ต</button>
+    <script>
+        const ball = document.getElementById('ball');
+        function drop() {
+            ball.style.transition = 'top 1s cubic-bezier(0.5, 0, 1, 1)';
+            ball.style.top = '270px';
+        }
+        function reset() {
+            ball.style.transition = 'none';
+            ball.style.top = '0px';
+        }
+    </script>
+</body>
+</html>

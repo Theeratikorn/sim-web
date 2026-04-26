@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดคอร์ส - Grow Up Study</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .list-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .list-item:hover {
+            background-color: rgba(168, 85, 247, 0.1);
+            border-color: var(--color-primary);
+            transform: translateX(5px);
+        }
+        .section-title {
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--color-primary);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        .badge-video {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-sim {
+            background-color: var(--color-secondary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Grow Up Study</a>
+            <div class="nav-links" id="auth-nav"></div>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 40px 0; flex: 1; max-width: 900px;">
+        <a href="courses.html" class="back-link" style="display:inline-block; margin-bottom:20px; color:var(--text-muted);">&larr; กลับไปหน้ารวมคอร์ส</a>
+        
+        <div id="course-header">
+            <h2>กำลังโหลดข้อมูลคอร์ส...</h2>
+        </div>
+
+        <h3 class="section-title">📺 บทเรียน (Videos)</h3>
+        <div class="list-group" id="video-list">
+            <!-- Video links injected here -->
+        </div>
+
+        <h3 class="section-title">🎮 โปรแกรมจำลอง (Simulations)</h3>
+        <div class="list-group" id="sim-list">
+            <!-- Sim links injected here -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Grow Up Study. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        function renderCourseDetail() {
+            const courseId = parseInt(getQueryParam('courseId'));
+            const courseHeader = document.getElementById('course-header');
+            const videoList = document.getElementById('video-list');
+            const simList = document.getElementById('sim-list');
+
+            if (!courseId) {
+                courseHeader.innerHTML = '<h2 style="color:red;">ไม่พบข้อมูลคอร์ส</h2>';
+                return;
+            }
+
+            const course = courses.find(c => c.id === courseId);
+
+            if (course) {
+                if (course.enrollmentStatus !== 'approved' || course.isExpired) {
+                    alert('คอร์สนี้ยังไม่ได้รับการอนุมัติ หรือหมดอายุไปแล้วครับ');
+                    window.location.href = 'courses.html';
+                    return;
+                }
+
+                // Render Header
+                courseHeader.innerHTML = `
+                    <h2 style="font-size: 2.5rem; color: var(--color-primary);">${course.title}</h2>
+                    <p class="text-muted mt-2">${course.description}</p>
+                    <div style="margin-top: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.9rem; color: var(--color-secondary);">ความคืบหน้าของคอร์ส</span>
+                            <span style="font-size: 0.9rem; font-weight: bold; color: #2ecc71;">${course.progressPercentage || 0}%</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(0,0,0,0.3); border-radius: 5px; height: 8px; overflow: hidden;">
+                            <div style="width: ${course.progressPercentage || 0}%; background: #2ecc71; height: 100%; transition: width 0.5s ease-in-out;"></div>
+                        </div>
+                    </div>
+                `;
+
+                // Check role
+                const user = getCurrentUser();
+                const isTeacher = user && user.role === 'teacher';
+
+                // Render Videos
+                if (course.lessons && course.lessons.length > 0) {
+                    let vHtml = '';
+                    course.lessons.forEach(lesson => {
+                        const checkMark = lesson.isCompleted ? '<span style="color: #2ecc71; margin-left: 10px; font-size: 0.9rem;">✅</span>' : '';
+                        if (isTeacher) {
+                            vHtml += `
+                                <div class="list-item" style="opacity: 0.6; cursor: not-allowed; border-color: rgba(255,255,255,0.05);">
+                                    <span>🔒 ${lesson.title} ${checkMark}</span>
+                                    <span class="badge-video" style="background-color: gray;">สงวนสิทธิ์สำหรับ นร.</span>
+                                </div>
+                            `;
+                        } else {
+                            vHtml += `
+                                <a href="lesson.html?courseId=${course.id}&itemId=${lesson.id}&type=video" class="list-item">
+                                    <span>${lesson.title} ${checkMark}</span>
+                                    <span class="badge-video">Video</span>
+                                </a>
+                            `;
+                        }
+                    });
+                    videoList.innerHTML = vHtml;
+                } else {
+                    videoList.innerHTML = '<p class="text-muted">ไม่มีบทเรียนในคอร์สนี้</p>';
+                }
+
+                // Render Simulations
+                if (course.simulations && course.simulations.length > 0) {
+                    let sHtml = '';
+                    course.simulations.forEach(sim => {
+                        sHtml += `
+                            <a href="lesson.html?courseId=${course.id}&itemId=${sim.id}&type=sim" class="list-item">
+                                <span>${sim.title}</span>
+                                <span class="badge-sim">Simulation</span>
+                            </a>
+                        `;
+                    });
+                    simList.innerHTML = sHtml;
+                } else {
+                    simList.innerHTML = '<p class="text-muted">ไม่มีโปรแกรมจำลองในคอร์สนี้</p>';
+                }
+
+            } else {
+                courseHeader.innerHTML = '<h2 style="color:red;">ไม่พบคอร์สที่ต้องการ</h2>';
+            }
+        }
+
+        document.addEventListener('coursesLoaded', renderCourseDetail);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (courses.length > 0) renderCourseDetail();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คลังโปรแกรมจำลอง - Grow Up Study</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .filter-bar input, .filter-bar select {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+        .filter-bar input:focus, .filter-bar select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        .sim-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .course-badge {
+            display: inline-block;
+            background-color: rgba(168, 85, 247, 0.2);
+            color: var(--color-primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Grow Up Study <span style="color:var(--color-secondary); font-size:1rem;">(Teacher)</span></a>
+            <div class="nav-links" id="auth-nav"></div>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 40px 0; flex: 1;">
+        <h2 class="mb-2">คลังโปรแกรมจำลอง (Simulation Gallery)</h2>
+        <p class="text-muted mb-4">ค้นหาและเลือกใช้โปรแกรมจำลองเพื่อประกอบการสอน</p>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อโปรแกรมจำลอง...">
+            <select id="course-filter">
+                <option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>
+                <!-- Options injected by JS -->
+            </select>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="grid grid-cols-3" id="sim-gallery">
+            <!-- Sim cards injected by JS -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Grow Up Study. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        function initGallery() {
+            const searchInput = document.getElementById('search-input');
+            const courseFilter = document.getElementById('course-filter');
+            const simGallery = document.getElementById('sim-gallery');
+
+            // 1. Gather all simulations
+            let allSims = [];
+            courses.forEach(c => {
+                if (c.simulations && c.simulations.length > 0) {
+                    c.simulations.forEach(sim => {
+                        allSims.push({
+                            ...sim,
+                            courseId: c.id,
+                            courseTitle: c.title
+                        });
+                    });
+                }
+            });
+
+            // 2. Populate Course Filter Dropdown
+            let optionsHtml = '<option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>';
+            courses.forEach(c => {
+                if(c.simulations && c.simulations.length > 0) {
+                    optionsHtml += `<option value="${c.id}">${c.title}</option>`;
+                }
+            });
+            courseFilter.innerHTML = optionsHtml;
+
+            // 3. Render Function
+            function renderGallery() {
+                const searchText = searchInput.value.toLowerCase();
+                const filterCourseId = courseFilter.value;
+
+                // Filter logic
+                const filteredSims = allSims.filter(sim => {
+                    const matchText = sim.title.toLowerCase().includes(searchText) || sim.courseTitle.toLowerCase().includes(searchText);
+                    const matchCourse = filterCourseId === 'all' || sim.courseId.toString() === filterCourseId;
+                    return matchText && matchCourse;
+                });
+
+                // Display logic
+                if (filteredSims.length === 0) {
+                    simGallery.innerHTML = '<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 40px;">ไม่พบโปรแกรมจำลองที่ค้นหา</p>';
+                    return;
+                }
+
+                let html = '';
+                filteredSims.forEach(sim => {
+                    html += `
+                        <div class="card sim-card">
+                            <div>
+                                <span class="course-badge">${sim.courseTitle}</span>
+                                <h3>${sim.title}</h3>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <a href="lesson.html?courseId=${sim.courseId}&itemId=${sim.id}&type=sim" class="btn btn-primary btn-block">เปิดโปรแกรมจำลอง</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                simGallery.innerHTML = html;
+            }
+
+            // 4. Attach Event Listeners
+            searchInput.addEventListener('input', renderGallery);
+            courseFilter.addEventListener('change', renderGallery);
+
+            // 5. Initial Render
+            renderGallery();
+        }
+
+        document.addEventListener('coursesLoaded', initGallery);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (courses.length > 0) initGallery();
+        });
+    </script>
+</body>
+</html>

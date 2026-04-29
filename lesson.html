@@ -105,10 +105,16 @@
             if (type === 'video') {
                 item = course.lessons.find(l => l.id === itemId);
                 if (item) {
+                    let parsedVideoId = item.videoId;
+                    const match = parsedVideoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                    if (match && match[2].length === 11) {
+                        parsedVideoId = match[2];
+                    }
+
                     iframeHtml = `
                         <div class="video-container">
                             <iframe 
-                                src="https://www.youtube.com/embed/${item.videoId}" 
+                                src="https://www.youtube.com/embed/${parsedVideoId}" 
                                 title="YouTube video player" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                 allowfullscreen>

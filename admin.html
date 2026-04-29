@@ -310,10 +310,14 @@
             const lesson = course.lessons.find(l => l.id === id);
             const title = prompt('ชื่อวิดีโอ:', lesson.title);
             if(title === null) return;
-            const videoId = prompt('รหัส YouTube:', lesson.video_id);
+            let videoId = prompt('รหัส YouTube หรือลิงก์เต็ม:', lesson.video_id);
             if(videoId === null) return;
-            const documentUrl = prompt('ลิงก์ชีทเรียน (เว้นว่างได้):', lesson.document_url || '');
-            if(documentUrl === null) return;
+            
+            // Extract video ID if it's a URL
+            const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+            if (match && match[2].length === 11) {
+                videoId = match[2];
+            }
 
             try {
                 await fetch(`${API_URL}/lessons/${id}`, {
@@ -421,8 +425,14 @@
                 e.preventDefault();
                 const cId = parseInt(document.getElementById('v-courseId').value);
                 const title = document.getElementById('v-title').value;
-                const videoId = document.getElementById('v-videoId').value;
+                let videoId = document.getElementById('v-videoId').value;
                 const documentUrl = document.getElementById('v-documentUrl').value;
+                
+                // Extract video ID if it's a URL
+                const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                if (match && match[2].length === 11) {
+                    videoId = match[2];
+                }
                 
                 try {
                     const res = await fetch(`${API_URL}/courses/${cId}/lessons`, {

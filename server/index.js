@@ -25,7 +25,7 @@ app.use('/js', express.static(path.join(__dirname, '../js')));
 app.use('/simulations', express.static(path.join(__dirname, '../simulations')));
 
 // Serve HTML files
-app.get('/*.html', (req, res) => {
+app.get(/.*\.html$/, (req, res) => {
     res.sendFile(path.join(__dirname, '..', req.path));
 });
 app.get('/', (req, res) => {

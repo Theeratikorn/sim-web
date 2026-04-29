@@ -4,7 +4,11 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import AdmZip from 'adm-zip';
+import { randomUUID } from 'crypto';
 import { getDb, initDb } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +27,31 @@ app.use(express.json());
 app.use('/css', express.static(path.join(__dirname, '../css')));
 app.use('/js', express.static(path.join(__dirname, '../js')));
 app.use('/simulations', express.static(path.join(__dirname, '../simulations')));
+
+// Setup upload directory (supports Railway Volume via UPLOADS_DIR env var)
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '../uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Multer config — store temporarily then process
+const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const tmp = path.join(UPLOADS_DIR, '_tmp');
+        if (!fs.existsSync(tmp)) fs.mkdirSync(tmp, { recursive: true });
+        cb(null, tmp);
+    },
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+});
+const upload = multer({
+    storage: multerStorage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+    fileFilter: (req, file, cb) => {
+        const allowed = ['.html', '.zip'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowed.includes(ext)) cb(null, true);
+        else cb(new Error('Only .html and .zip files are allowed'));
+    }
+});
 
 // Serve HTML files
 app.get(/.*\.html$/, (req, res) => {
@@ -398,6 +427,56 @@ app.delete('/api/simulations/:id', authenticateToken, isAdmin, async (req, res) 
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete simulation' });
+    }
+});
+
+// --- SIMULATION FILE UPLOAD ---
+app.post('/api/simulations/upload', authenticateToken, isAdmin, upload.single('file'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const tmpPath = req.file.path;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+
+    try {
+        if (ext === '.html') {
+            // Single HTML file — move to uploads/sims/<uuid>.html
+            const destDir = path.join(UPLOADS_DIR, 'sims');
+            if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+
+            const filename = `${randomUUID()}.html`;
+            const destPath = path.join(destDir, filename);
+            fs.renameSync(tmpPath, destPath);
+
+            return res.json({ url: `/uploads/sims/${filename}` });
+
+        } else if (ext === '.zip') {
+            // ZIP file — extract to uploads/sims/<uuid>/
+            const folderName = randomUUID();
+            const destDir = path.join(UPLOADS_DIR, 'sims', folderName);
+            fs.mkdirSync(destDir, { recursive: true });
+
+            const zip = new AdmZip(tmpPath);
+            zip.extractAllTo(destDir, true);
+            fs.unlinkSync(tmpPath); // remove tmp zip
+
+            // Find entry point: prefer index.html at root, else first html found
+            const files = fs.readdirSync(destDir);
+            let entry = files.find(f => f.toLowerCase() === 'index.html');
+            if (!entry) {
+                entry = files.find(f => f.toLowerCase().endsWith('.html'));
+            }
+
+            if (!entry) {
+                return res.status(400).json({ error: 'No HTML entry point found in ZIP. Make sure your ZIP contains an index.html file.' });
+            }
+
+            return res.json({ url: `/uploads/sims/${folderName}/${entry}` });
+        }
+    } catch (err) {
+        // Cleanup on error
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+        console.error('Upload error:', err);
+        return res.status(500).json({ error: err.message || 'Upload failed' });
     }
 });
 

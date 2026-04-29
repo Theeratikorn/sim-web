@@ -10,7 +10,8 @@
     "dev": "npx concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "start": "node server/index.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "npm rebuild sqlite3 --build-from-source"
   },
   "keywords": [],
   "author": "",

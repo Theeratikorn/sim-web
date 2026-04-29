@@ -105,11 +105,12 @@
             if (type === 'video') {
                 item = course.lessons.find(l => l.id === itemId);
                 if (item) {
-                    let parsedVideoId = item.videoId;
-                    const match = parsedVideoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-                    if (match && match[2].length === 11) {
-                        parsedVideoId = match[2];
-                    }
+                    // Support both video_id (from DB) and videoId (camelCase) 
+                    let rawId = item.video_id || item.videoId || '';
+                    
+                    // Extract video ID if it's a full URL
+                    const match = rawId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                    const parsedVideoId = (match && match[2].length === 11) ? match[2] : rawId;
 
                     iframeHtml = `
                         <div class="video-container">

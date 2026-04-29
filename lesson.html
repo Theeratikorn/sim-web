@@ -141,10 +141,11 @@
             } else if (type === 'sim') {
                 item = course.simulations.find(s => s.id === itemId);
                 if (item) {
+                    const simUrl = item.file_url || item.fileUrl || '';
                     iframeHtml = `
                         <div style="width: 100%; height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3); background-color: white;">
                             <iframe 
-                                src="${item.fileUrl}" 
+                                src="${simUrl}" 
                                 style="width: 100%; height: 100%; border: none;"
                                 title="${item.title}">
                             </iframe>

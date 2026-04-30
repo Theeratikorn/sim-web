@@ -5,6 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการระบบ Admin - Grow Up Study</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .course-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .course-select-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .course-select-item:hover { background: rgba(255,255,255,0.1); }
+        .course-select-item.selected { background: rgba(46, 204, 113, 0.2); border: 1px solid var(--color-primary); }
+        .course-select-item input { cursor: pointer; }
+        .package-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #e74c3c; }
+        .package-price { font-size: 1.5rem; font-weight: bold; color: #e74c3c; }
+        .tag-badge { display: inline-block; background: rgba(168, 85, 247, 0.2); color: var(--color-primary); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; margin-right: 5px; }
+        .upload-status { padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; display: none; }
+    </style>
 </head>
 <body>
     <header>
@@ -21,14 +51,8 @@
         <div class="card admin-section">
             <h3 class="admin-section-title">🔒 เปลี่ยนรหัสผ่านแอดมิน</h3>
             <form id="change-pwd-form">
-                <div class="form-group">
-                    <label>รหัสผ่านเดิม</label>
-                    <input type="password" id="pwd-old" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>รหัสผ่านใหม่</label>
-                    <input type="password" id="pwd-new" class="form-control" required>
-                </div>
+                <div class="form-group"><label>รหัสผ่านเดิม</label><input type="password" id="pwd-old" class="form-control" required></div>
+                <div class="form-group"><label>รหัสผ่านใหม่</label><input type="password" id="pwd-new" class="form-control" required></div>
                 <button type="submit" class="btn btn-outline">เปลี่ยนรหัสผ่าน</button>
             </form>
         </div>
@@ -37,18 +61,9 @@
         <div class="card admin-section" style="border-left: 4px solid #2ecc71;">
             <h3 class="admin-section-title">➕ สร้างคอร์สเรียนใหม่</h3>
             <form id="add-course-form">
-                <div class="form-group">
-                    <label>ชื่อคอร์ส</label>
-                    <input type="text" id="c-title" class="form-control" placeholder="เช่น ฟิสิกส์ ม.5" required>
-                </div>
-                <div class="form-group">
-                    <label>รายละเอียดคอร์ส</label>
-                    <textarea id="c-desc" class="form-control" rows="2" placeholder="อธิบายสั้นๆ" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>อายุคอร์ส (วัน) *ปล่อยว่างถ้าให้เรียนได้ตลอดชีพ</label>
-                    <input type="number" id="c-duration" class="form-control" placeholder="เช่น 30">
-                </div>
+                <div class="form-group"><label>ชื่อคอร์ส</label><input type="text" id="c-title" class="form-control" placeholder="เช่น ฟิสิกส์ ม.5" required></div>
+                <div class="form-group"><label>รายละเอียด</label><textarea id="c-desc" class="form-control" rows="2" required></textarea></div>
+                <div class="form-group"><label>อายุคอร์ส (วัน)</label><input type="number" id="c-duration" class="form-control" placeholder="30"></div>
                 <button type="submit" class="btn btn-success">สร้างคอร์ส</button>
             </form>
         </div>
@@ -57,24 +72,54 @@
         <div class="card admin-section" style="border-left: 4px solid var(--color-primary);">
             <h3 class="admin-section-title">🎬 เพิ่มวิดีโอ (YouTube)</h3>
             <form id="add-video-form">
-                <div class="form-group">
-                    <label>เลือกคอร์ส</label>
-                    <select id="v-courseId" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label>ชื่อบทเรียน / วิดีโอ</label>
-                    <input type="text" id="v-title" class="form-control" placeholder="เช่น Ep.4 - กฎของนิวตัน" required>
-                </div>
-                <div class="form-group">
-                    <label>รหัส YouTube (Video ID)</label>
-                    <input type="text" id="v-videoId" class="form-control" placeholder="เช่น dQw4w9WgXcQ" required>
-                </div>
-                <div class="form-group">
-                    <label>ลิงก์เอกสารประกอบการเรียน (ถ้ามี)</label>
-                    <input type="text" id="v-documentUrl" class="form-control" placeholder="ลิงก์ Google Drive หรือ PDF">
-                </div>
+                <div class="form-group"><label>เลือกคอร์ส</label><select id="v-courseId" class="form-control" required></select></div>
+                <div class="form-group"><label>ชื่อวิดีโอ</label><input type="text" id="v-title" class="form-control" required></div>
+                <div class="form-group"><label>Video ID</label><input type="text" id="v-videoId" class="form-control" required></div>
+                <div class="form-group"><label>เอกสาร (ถ้ามี)</label><input type="text" id="v-documentUrl" class="form-control"></div>
                 <button type="submit" class="btn btn-primary">เพิ่มวิดีโอ</button>
             </form>
+        </div>
+
+        <!-- Add Simulation -->
+        <div class="card admin-section" style="border-left: 4px solid var(--color-secondary);">
+            <h3 class="admin-section-title">🖥️ เพิ่มโปรแกรมจำลอง (Simulation)</h3>
+            <div style="display:flex; gap:10px; margin: 15px 0;">
+                <button type="button" id="btn-mode-upload" onclick="setSimMode('upload')" class="btn btn-primary" style="flex:1;">📂 อัปโหลดไฟล์</button>
+                <button type="button" id="btn-mode-url" onclick="setSimMode('url')" class="btn btn-outline" style="flex:1;">🔗 ใส่ URL</button>
+            </div>
+            <form id="add-sim-form">
+                <div class="form-group"><label>เลือกคอร์ส (เลือกได้หลายคอร์ส)</label><div id="sim-course-checkboxes" class="course-select-grid"></div></div>
+                <div class="form-group"><label>ชื่อ Simulation</label><input type="text" id="s-title" class="form-control" required></div>
+                <div class="form-group"><label>Tag ครู</label><input type="text" id="s-teacher-tag" class="form-control" placeholder="เช่น ครูฟิสิกส์, ครูเคมี"></div>
+                <div id="sim-mode-upload">
+                    <div class="form-group"><label>เลือกไฟล์ (.html หรือ .zip)</label><input type="file" id="s-file" class="form-control" accept=".html,.zip" style="padding:8px;"></div>
+                    <div id="s-upload-status" class="upload-status"></div>
+                </div>
+                <div id="sim-mode-url" style="display:none;">
+                    <div class="form-group"><label>File URL</label><input type="text" id="s-fileUrl" class="form-control"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="background:var(--color-secondary); width:100%;">➕ เพิ่ม Simulation</button>
+            </form>
+        </div>
+
+        <!-- Package Management -->
+        <div class="card admin-section" style="border-left: 4px solid #e74c3c;">
+            <h3 class="admin-section-title">📦 จัดการแพ็คเรียน (Packages)</h3>
+            <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin:15px 0;">
+                <h4 style="margin:0 0 15px;">➕ สร้างแพ็คใหม่</h4>
+                <form id="add-package-form">
+                    <div class="form-group"><label>ชื่อแพ็ค</label><input type="text" id="p-name" class="form-control" required></div>
+                    <div class="form-group"><label>รายละเอียด</label><textarea id="p-desc" class="form-control" rows="2"></textarea></div>
+                    <div style="display:flex; gap:15px;">
+                        <div class="form-group" style="flex:1;"><label>ราคา</label><input type="number" id="p-price" class="form-control" placeholder="990"></div>
+                        <div class="form-group" style="flex:1;"><label>ราคาเดิม</label><input type="number" id="p-original" class="form-control" placeholder="1500"></div>
+                    </div>
+                    <div class="form-group"><label>เลือกคอร์สในแพ็ค</label><div id="pkg-course-checkboxes" class="course-select-grid"></div></div>
+                    <div class="form-group"><label>เลือก Simulation</label><div id="pkg-sim-checkboxes" class="course-select-grid"></div></div>
+                    <button type="submit" class="btn btn-primary" style="background:#e74c3c; width:100%;">📦 สร้างแพ็ค</button>
+                </form>
+            </div>
+            <div id="package-list" class="mt-3"></div>
         </div>
 
         <!-- Pending Enrollments -->
@@ -102,194 +147,161 @@
         </div>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Grow Up Study. All rights reserved.</p>
-        </div>
-    </footer>
+    <footer><div class="container"><p>&copy; 2026 Grow Up Study. All rights reserved.</p></div></footer>
 
     <script src="js/app.js"></script>
     <script>
-        async function fetchPendingEnrollments() {
-            try {
-                const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() });
-                if (res.ok) {
-                    const pending = await res.json();
-                    const container = document.getElementById('pending-list');
-                    if (pending.length === 0) {
-                        container.innerHTML = '<p class="text-muted">ไม่มีคำขอใหม่</p>';
-                        return;
-                    }
-                    container.innerHTML = pending.map(e => `
-                        <div class="item-badge-row">
-                            <span><strong>${e.username}</strong> - ${e.courseTitle}</span>
-                            <button onclick="approveEnrollment(${e.id})" class="btn btn-sm btn-success">✅ อนุมัติ</button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) { console.error(e); }
-        }
+        let allSimulations = [];
+        let allPackages = [];
 
-        window.approveEnrollment = async function(id) {
-            const res = await fetch(`${API_URL}/admin/enrollments/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
-            if (res.ok) { alert('อนุมัติสำเร็จ!'); fetchPendingEnrollments(); }
+        window.setSimMode = function(mode) {
+            document.getElementById('sim-mode-upload').style.display = mode === 'upload' ? '' : 'none';
+            document.getElementById('sim-mode-url').style.display = mode === 'url' ? '' : 'none';
+            document.getElementById('btn-mode-upload').className = mode === 'upload' ? 'btn btn-primary' : 'btn btn-outline';
+            document.getElementById('btn-mode-url').className = mode === 'url' ? 'btn btn-primary' : 'btn btn-outline';
         };
 
-        async function fetchActiveEnrollments() {
-            try {
-                const res = await fetch(`${API_URL}/admin/enrollments/active`, { headers: getAuthHeaders() });
-                if (res.ok) {
-                    const active = await res.json();
-                    const container = document.getElementById('active-list');
-                    if (active.length === 0) {
-                        container.innerHTML = '<p class="text-muted">ไม่มีการลงทะเบียนที่ active</p>';
-                        return;
-                    }
-                    container.innerHTML = active.map(e => `
-                        <div class="item-badge-row">
-                            <span><strong>${e.username}</strong> - ${e.courseTitle}</span>
-                            <button onclick="deleteEnrollment(${e.id})" class="btn btn-sm btn-danger-outline">❌ ลบ</button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) { console.error(e); }
+        function renderCourseCheckboxes(containerId, items, selectedIds, onChange) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = items.map(c => `<label class="course-select-item ${selectedIds.includes(c.id) ? 'selected' : ''}"><input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked' : ''} onchange="${onChange}(this)"><span>${c.title}</span></label>`).join('');
         }
 
-        window.deleteEnrollment = async function(id) {
-            if (!confirm('ยืนยันการลบ?')) return;
-            await fetch(`${API_URL}/admin/enrollments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchActiveEnrollments();
-        };
+        const selectedSimCourses = new Set();
+        const selectedPkgCourses = new Set();
+        const selectedPkgSims = new Set();
 
-        async function fetchUsers() {
-            try {
-                const res = await fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() });
-                if (res.ok) {
-                    const users = await res.json();
-                    const container = document.getElementById('users-list');
-                    container.innerHTML = users.map(u => `
-                        <div class="item-badge-row">
-                            <span><strong>${u.username}</strong> (${u.role})</span>
-                            <select onchange="changeRole(${u.id}, this.value)" class="form-control" style="width:auto;">
-                                <option value="student" ${u.role==='student'?'selected':''}>นักเรียน</option>
-                                <option value="teacher" ${u.role==='teacher'?'selected':''}>ครู</option>
-                                <option value="admin" ${u.role==='admin'?'selected':''}>แอดมิน</option>
-                            </select>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) { console.error(e); }
-        }
+        window.toggleSimCourse = function(cb) { parseInt(cb.value); cb.checked ? selectedSimCourses.add(parseInt(cb.value)) : selectedSimCourses.delete(parseInt(cb.value)); cb.closest('.course-select-item').classList.toggle('selected', cb.checked); };
+        window.togglePkgCourse = function(cb) { cb.checked ? selectedPkgCourses.add(parseInt(cb.value)) : selectedPkgCourses.delete(parseInt(cb.value)); cb.closest('.course-select-item').classList.toggle('selected', cb.checked); };
+        window.togglePkgSim = function(cb) { cb.checked ? selectedPkgSims.add(parseInt(cb.value)) : selectedPkgSims.delete(parseInt(cb.value)); cb.closest('.course-select-item').classList.toggle('selected', cb.checked); };
 
-        window.changeRole = async function(id, role) {
-            await fetch(`${API_URL}/admin/users/${id}/role`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ role })
+        async function fetchAllSimulations() { try { const res = await fetch(`${API_URL}/admin/simulations`, { headers: getAuthHeaders() }); if (res.ok) allSimulations = await res.json(); } catch(e) { console.error(e); } }
+        async function fetchPackages() { try { const res = await fetch(`${API_URL}/admin/packages`, { headers: getAuthHeaders() }); if (res.ok) allPackages = await res.json(); renderPackageList(); } catch(e) { console.error(e); } }
+
+        function renderPackageList() {
+            const container = document.getElementById('package-list');
+            if (allPackages.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีแพ็ค</p>'; return; }
+            let html = '';
+            allPackages.forEach(pkg => {
+                const courses = pkg.courses?.map(c => c.title).join(', ') || '';
+                const sims = pkg.simulations?.map(s => s.title).join(', ') || '';
+                html += `<div class="package-card ${pkg.is_active ? '' : 'inactive'}"><div style="display:flex; justify-content:space-between; align-items:center;"><div><h4 style="margin:0;">📦 ${pkg.name}</h4><p style="font-size:0.85rem;color:#aaa;margin:5px 0;">${pkg.description || ''}</p></div><div><button onclick="deletePackage(${pkg.id})" class="btn btn-sm btn-danger-outline">🗑️ ลบ</button></div></div><p style="font-size:0.8rem;margin:8px 0;">📚 ${courses || 'ไม่มีคอร์ส'} | 🖥️ ${sims || 'ไม่มี Simulation'}</p><div class="package-price">฿${pkg.price.toLocaleString()} <span style="font-size:0.9rem;color:#999;text-decoration:line-through;font-weight:normal;">฿${pkg.original_price.toLocaleString()}</span></div></div>`;
             });
-            fetchUsers();
-        };
+            container.innerHTML = html;
+        }
+
+        window.deletePackage = async function(id) { if(!confirm('ลบแพ็คนี้?')) return; await fetch(`${API_URL}/packages/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchPackages(); };
+
+        async function fetchPendingEnrollments() { try { const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() }); if (res.ok) { const pending = await res.json(); const container = document.getElementById('pending-list'); container.innerHTML = pending.length === 0 ? '<p class="text-muted">ไม่มีคำขอใหม่</p>' : pending.map(e => `<div class="item-badge-row"><span><strong>${e.username}</strong> - ${e.courseTitle}</span><button onclick="approveEnrollment(${e.id})" class="btn btn-sm btn-success">✅ อนุมัติ</button></div>`).join(''); } } catch(e) { console.error(e); } }
+        window.approveEnrollment = async function(id) { const res = await fetch(`${API_URL}/admin/enrollments/${id}/approve`, { method: 'POST', headers: getAuthHeaders() }); if (res.ok) { alert('อนุมัติสำเร็จ!'); fetchPendingEnrollments(); } };
+
+        async function fetchActiveEnrollments() { try { const res = await fetch(`${API_URL}/admin/enrollments/active`, { headers: getAuthHeaders() }); if (res.ok) { const active = await res.json(); const container = document.getElementById('active-list'); container.innerHTML = active.length === 0 ? '<p class="text-muted">ไม่มีการลงทะเบียน active</p>' : active.map(e => `<div class="item-badge-row"><span><strong>${e.username}</strong> - ${e.courseTitle}</span><button onclick="deleteEnrollment(${e.id})" class="btn btn-sm btn-danger-outline">❌ ลบ</button></div>`).join(''); } } catch(e) { console.error(e); } }
+        window.deleteEnrollment = async function(id) { if(!confirm('ยืนยัน?')) return; await fetch(`${API_URL}/admin/enrollments/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchActiveEnrollments(); };
+
+        async function fetchUsers() { try { const res = await fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() }); if (res.ok) { const users = await res.json(); const container = document.getElementById('users-list'); container.innerHTML = users.map(u => `<div class="item-badge-row"><span><strong>${u.username}</strong> (${u.role})</span><select onchange="changeRole(${u.id}, this.value)" class="form-control" style="width:auto;"><option value="student" ${u.role==='student'?'selected':''}>นักเรียน</option><option value="teacher" ${u.role==='teacher'?'selected':''}>ครู</option><option value="admin" ${u.role==='admin'?'selected':''}>แอดมิน</option></select></div>`).join(''); } } catch(e) { console.error(e); } }
+        window.changeRole = async function(id, role) { await fetch(`${API_URL}/admin/users/${id}/role`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ role }) }); fetchUsers(); };
 
         function renderContentManage() {
             const container = document.getElementById('content-manage-list');
-            if (courses.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์สเรียน</p>'; return; }
+            if (courses.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์ส</p>'; return; }
             let html = '';
             courses.forEach(c => {
-                html += `
-                <div class="course-card-admin">
-                    <div class="admin-section-header">
-                        <h4 style="margin:0;">📚 ${c.title}</h4>
-                        <div>
-                            <button onclick="deleteCourse(${c.id})" class="btn btn-sm btn-danger-outline">🗑️ ลบ</button>
-                        </div>
-                    </div>
-                    ${c.cover_url ? `<img src="${c.cover_url}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
-                    <p style="font-size:0.9rem;margin-bottom:10px;">${c.description}</p>
-                    <div style="border-left:2px dashed rgba(255,255,255,0.1);padding-left:15px;">
-                        <p style="font-size:0.85rem;color:#aaa;">วิดีโอ (${c.lessons?.length || 0})</p>`;
-                c.lessons?.forEach(l => {
-                    html += `<div class="item-badge-row"><span>▶️ ${l.title}</span><button onclick="deleteLesson(${l.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`;
-                });
+                html += `<div class="course-card-admin"><div class="admin-section-header"><h4 style="margin:0;">📚 ${c.title}</h4><div><button onclick="deleteCourse(${c.id})" class="btn btn-sm btn-danger-outline">🗑️ ลบ</button></div></div>${c.cover_url ? `<img src="${c.cover_url}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}<p style="font-size:0.9rem;margin-bottom:10px;">${c.description}</p><div style="border-left:2px dashed rgba(255,255,255,0.1);padding-left:15px;"><p style="font-size:0.85rem;color:#aaa;">วิดีโอ (${c.lessons?.length || 0})</p>`;
+                c.lessons?.forEach(l => { html += `<div class="item-badge-row"><span>▶️ ${l.title}</span><button onclick="deleteLesson(${l.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`; });
                 html += `<p style="font-size:0.85rem;color:#aaa;margin-top:10px;">โปรแกรมจำลอง (${c.simulations?.length || 0})</p>`;
-                c.simulations?.forEach(s => {
-                    html += `<div class="item-badge-row"><span>🖥️ ${s.title}</span><button onclick="deleteSim(${s.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`;
-                });
+                c.simulations?.forEach(s => { const tags = s.teacher_tag ? s.teacher_tag.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : ''; html += `<div class="item-badge-row"><span>🖥️ ${s.title} ${tags}</span><button onclick="deleteSim(${s.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`; });
                 html += `</div></div>`;
             });
             container.innerHTML = html;
         }
 
-        window.deleteCourse = async function(id) {
-            if(!confirm('คำเตือน: ลบคอร์สจะลบทุกอย่าง!')) return;
-            await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
-
-        window.deleteLesson = async function(id) {
-            if(!confirm('ลบวิดีโอนี้?')) return;
-            await fetch(`${API_URL}/lessons/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
-
-        window.deleteSim = async function(id) {
-            if(!confirm('ลบโปรแกรมจำลองนี้?')) return;
-            await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
+        window.deleteCourse = async function(id) { if(!confirm('คำเตือน: ลบคอร์สจะลบทุกอย่าง!')) return; await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); };
+        window.deleteLesson = async function(id) { if(!confirm('ลบวิดีโอนี้?')) return; await fetch(`${API_URL}/lessons/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); };
+        window.deleteSim = async function(id) { if(!confirm('ลบ Simulation นี้?')) return; await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() }); fetchCourses(); fetchAllSimulations(); };
 
         document.addEventListener('coursesLoaded', async () => {
+            await fetchAllSimulations();
+            initAdmin();
+            await fetchPackages();
             renderContentManage();
             fetchPendingEnrollments();
             fetchActiveEnrollments();
             fetchUsers();
         });
 
+        function initAdmin() {
+            renderCourseCheckboxes('sim-course-checkboxes', courses, [], 'toggleSimCourse');
+            renderCourseCheckboxes('pkg-course-checkboxes', courses, [], 'togglePkgCourse');
+            if (allSimulations.length > 0) renderCourseCheckboxes('pkg-sim-checkboxes', allSimulations, [], 'togglePkgSim');
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            renderContentManage();
+            if (courses.length > 0) { await fetchAllSimulations(); initAdmin(); await fetchPackages(); renderContentManage(); }
             fetchPendingEnrollments();
             fetchActiveEnrollments();
             fetchUsers();
 
-            // Course form
             document.getElementById('add-course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const title = document.getElementById('c-title').value;
-                const description = document.getElementById('c-desc').value;
-                const durationDays = document.getElementById('c-duration').value;
+                const title = document.getElementById('c-title').value, description = document.getElementById('c-desc').value, durationDays = document.getElementById('c-duration').value;
                 const res = await fetch(`${API_URL}/courses`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, description, durationDays }) });
                 if (res.ok) { alert('สร้างคอร์สสำเร็จ!'); e.target.reset(); fetchCourses(); }
             });
 
-            // Password change
             document.getElementById('change-pwd-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const oldPassword = document.getElementById('pwd-old').value;
-                const newPassword = document.getElementById('pwd-new').value;
-                const res = await fetch(`${API_URL}/admin/password`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ oldPassword, newPassword }) });
-                const data = await res.json();
-                if (res.ok) { alert('เปลี่ยนรหัสผ่านสำเร็จ!'); e.target.reset(); }
-                else alert(data.error || 'เกิดข้อผิดพลาด');
+                const res = await fetch(`${API_URL}/admin/password`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ oldPassword: document.getElementById('pwd-old').value, newPassword: document.getElementById('pwd-new').value }) });
+                if (res.ok) { alert('เปลี่ยนรหัสสำเร็จ!'); e.target.reset(); } else alert('เกิดข้อผิดพลาด');
             });
 
-            // Video form
             document.getElementById('add-video-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const cId = parseInt(document.getElementById('v-courseId').value);
-                const title = document.getElementById('v-title').value;
                 let videoId = document.getElementById('v-videoId').value;
-                const documentUrl = document.getElementById('v-documentUrl').value;
                 const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
                 if (match && match[2].length === 11) videoId = match[2];
-                const res = await fetch(`${API_URL}/courses/${cId}/lessons`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, videoId, documentUrl }) });
+                const res = await fetch(`${API_URL}/courses/${cId}/lessons`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title: document.getElementById('v-title').value, videoId, documentUrl: document.getElementById('v-documentUrl').value }) });
                 if (res.ok) { alert('เพิ่มวิดีโอสำเร็จ!'); e.target.reset(); fetchCourses(); }
             });
 
-            // Populate course select
+            document.getElementById('add-sim-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('s-title').value, teacherTag = document.getElementById('s-teacher-tag').value;
+                const statusEl = document.getElementById('s-upload-status');
+                const courseIds = Array.from(selectedSimCourses);
+                let fileUrl = '';
+
+                if (currentSimMode === 'upload') {
+                    const fileInput = document.getElementById('s-file');
+                    if (!fileInput.files[0]) { alert('เลือกไฟล์ก่อน'); return; }
+                    statusEl.style.display = ''; statusEl.style.background = 'rgba(52,152,219,0.2)'; statusEl.textContent = '⏳ กำลังอัปโหลด...';
+                    const formData = new FormData(); formData.append('file', fileInput.files[0]);
+                    const uploadRes = await fetch(`${API_URL}/simulations/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt_token')}` }, body: formData });
+                    const uploadData = await uploadRes.json();
+                    if (!uploadRes.ok) { statusEl.style.background = 'rgba(231,76,60,0.2)'; statusEl.textContent = `❌ ${uploadData.error}`; return; }
+                    fileUrl = uploadData.url; statusEl.style.background = 'rgba(46,204,113,0.2)'; statusEl.textContent = `✅ อัปโหลดสำเร็จ`;
+                } else {
+                    fileUrl = document.getElementById('s-fileUrl').value;
+                    if (!fileUrl) { alert('ใส่ URL'); return; }
+                }
+
+                const mainCourseId = courseIds.length > 0 ? courseIds[0] : null;
+                if (!mainCourseId) { alert('เลือกคอร์สอย่างน้อย 1'); return; }
+                const extraCourseIds = courseIds.slice(1);
+                const res = await fetch(`${API_URL}/courses/${mainCourseId}/simulations`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, fileUrl, teacherTag, extraCourseIds }) });
+                if (res.ok) { alert('เพิ่ม Simulation สำเร็จ!'); e.target.reset(); statusEl.style.display = 'none'; selectedSimCourses.clear(); fetchCourses(); fetchAllSimulations(); }
+            });
+
+            document.getElementById('add-package-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const res = await fetch(`${API_URL}/packages`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ name: document.getElementById('p-name').value, description: document.getElementById('p-desc').value, price: parseFloat(document.getElementById('p-price').value) || 0, originalPrice: parseFloat(document.getElementById('p-original').value) || 0, courseIds: Array.from(selectedPkgCourses), simulationIds: Array.from(selectedPkgSims) }) });
+                if (res.ok) { alert('สร้างแพ็คสำเร็จ!'); e.target.reset(); selectedPkgCourses.clear(); selectedPkgSims.clear(); fetchPackages(); }
+            });
+
             const populateCourseSelect = setInterval(() => {
                 if (typeof courses !== 'undefined' && courses.length > 0) {
                     clearInterval(populateCourseSelect);
-                    const select = document.getElementById('v-courseId');
-                    select.innerHTML = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+                    document.getElementById('v-courseId').innerHTML = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
                 }
             }, 100);
         });

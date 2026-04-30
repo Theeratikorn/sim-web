@@ -667,11 +667,12 @@ app.get('/api/simulations/all', async (req, res) => {
     try {
         const db = await getDb();
         const sims = await db.all('SELECT * FROM simulations ORDER BY title ASC');
+        const courses = await db.all('SELECT id, title FROM courses ORDER BY display_order ASC');
         for (const s of sims) {
             const extra = await db.all('SELECT course_id FROM simulation_courses WHERE simulation_id = ?', [s.id]);
             s.extraCourseIds = extra.map(e => e.course_id);
         }
-        res.json(sims);
+        res.json({ simulations: sims, courses });
     } catch (err) {
         res.status(500).json({ error: 'Failed' });
     }

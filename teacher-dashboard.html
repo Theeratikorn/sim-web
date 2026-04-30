@@ -193,7 +193,14 @@
             try {
                 const res = await fetch(`${API_URL}/simulations/all`);
                 if (res.ok) {
-                    allSimulations = await res.json();
+                    const data = await res.json();
+                    allSimulations = data.simulations || data;
+                    const apiCourses = data.courses || [];
+                    
+                    // Use courses from API if available, otherwise use global courses
+                    if (apiCourses.length > 0) {
+                        populateCourseFilterWithList(apiCourses);
+                    }
                     
                     // Extract unique tags
                     const tagsSet = new Set();
@@ -389,17 +396,28 @@
             select.innerHTML = optionsHtml;
         }
 
+        // Populate course filter with custom list
+        function populateCourseFilterWithList(courseList) {
+            const select = document.getElementById('course-filter');
+            let optionsHtml = '<option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>';
+            
+            courseList.forEach(c => {
+                optionsHtml += `<option value="${c.id}">${c.title}</option>`;
+            });
+            
+            select.innerHTML = optionsHtml;
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
-            // Wait for courses to load
-            const checkCourses = setInterval(() => {
-                if (courses.length > 0) {
-                    clearInterval(checkCourses);
-                    populateCourseFilter();
-                    fetchAllSimulations();
-                    fetchEnrolledSimulations();
-                }
-            }, 100);
+            // Fetch simulations immediately (this will populate courses from API)
+            await fetchAllSimulations();
+            await fetchEnrolledSimulations();
+            
+            // Also try to populate from app.js courses as backup
+            if (typeof courses !== 'undefined' && courses.length > 0) {
+                populateCourseFilter();
+            }
             
             // Event listeners
             document.getElementById('search-input').addEventListener('input', renderGallery);

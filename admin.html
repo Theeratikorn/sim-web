@@ -5,145 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการระบบ Admin - Grow Up Study</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .package-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--color-primary);
-        }
-        .package-card.inactive {
-            opacity: 0.6;
-            border-left-color: #666;
-        }
-        .package-price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--color-primary);
-        }
-        .package-original {
-            font-size: 0.9rem;
-            color: #999;
-            text-decoration: line-through;
-        }
-        .tag-badge {
-            display: inline-block;
-            background: rgba(168, 85, 247, 0.2);
-            color: var(--color-primary);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-right: 5px;
-        }
-        .course-select-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .course-select-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .course-select-item:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .course-select-item.selected {
-            background: rgba(46, 204, 113, 0.2);
-            border: 1px solid var(--color-primary);
-        }
-        .course-select-item input {
-            cursor: pointer;
-        }
-        .standalone-badge {
-            background: #e74c3c;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-        }
-        .cover-preview {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        .carousel-container {
-            position: relative;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-        .carousel-track {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            padding: 10px 0;
-        }
-        .carousel-track::-webkit-scrollbar {
-            height: 8px;
-        }
-        .carousel-track::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-        }
-        .carousel-track::-webkit-scrollbar-thumb {
-            background: var(--color-primary);
-            border-radius: 4px;
-        }
-        .carousel-card {
-            min-width: 280px;
-            flex-shrink: 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .carousel-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--color-primary);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            z-index: 10;
-            font-size: 1.2rem;
-        }
-        .carousel-nav.prev { left: 0; }
-        .carousel-nav.next { right: 0; }
-    </style>
 </head>
 <body>
     <header>
         <div class="container nav-container">
-            <a href="index.html" class="logo">Grow Up Study <span style="color:var(--color-secondary); font-size:1rem;">(Admin)</span></a>
+            <a href="index.html" class="logo">Grow Up Study <span class="role-badge admin">(Admin)</span></a>
             <div class="nav-links" id="auth-nav"></div>
         </div>
     </header>
 
-    <main class="container" style="padding: 40px 0; flex: 1; max-width: 900px;">
-        <h2 class="mb-4">จัดการเนื้อหา (Admin Panel)</h2>
+    <main class="container main-content" style="max-width: 900px;">
+        <h2 class="page-title">จัดการระบบ Admin</h2>
 
         <!-- Change Password -->
-        <div class="card mb-4" style="border-top: 4px solid #34495e;">
-            <h3>🔒 เปลี่ยนรหัสผ่านแอดมิน</h3>
-            <form id="change-pwd-form" class="mt-2">
+        <div class="card admin-section">
+            <h3 class="admin-section-title">🔒 เปลี่ยนรหัสผ่านแอดมิน</h3>
+            <form id="change-pwd-form">
                 <div class="form-group">
                     <label>รหัสผ่านเดิม</label>
                     <input type="password" id="pwd-old" class="form-control" required>
@@ -152,14 +29,14 @@
                     <label>รหัสผ่านใหม่</label>
                     <input type="password" id="pwd-new" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary" style="background:#34495e; border:none;">เปลี่ยนรหัสผ่าน</button>
+                <button type="submit" class="btn btn-outline">เปลี่ยนรหัสผ่าน</button>
             </form>
         </div>
 
         <!-- Create Course -->
-        <div class="card mb-4" style="border-top: 4px solid #2ecc71;">
-            <h3>➕ สร้างคอร์สเรียนใหม่</h3>
-            <form id="add-course-form" class="mt-2">
+        <div class="card admin-section" style="border-left: 4px solid #2ecc71;">
+            <h3 class="admin-section-title">➕ สร้างคอร์สเรียนใหม่</h3>
+            <form id="add-course-form">
                 <div class="form-group">
                     <label>ชื่อคอร์ส</label>
                     <input type="text" id="c-title" class="form-control" placeholder="เช่น ฟิสิกส์ ม.5" required>
@@ -172,14 +49,14 @@
                     <label>อายุคอร์ส (วัน) *ปล่อยว่างถ้าให้เรียนได้ตลอดชีพ</label>
                     <input type="number" id="c-duration" class="form-control" placeholder="เช่น 30">
                 </div>
-                <button type="submit" class="btn btn-primary" style="background:#2ecc71; border:none;">สร้างคอร์ส</button>
+                <button type="submit" class="btn btn-success">สร้างคอร์ส</button>
             </form>
         </div>
 
         <!-- Add Video -->
-        <div class="card mb-4" style="border-top: 4px solid var(--color-primary);">
-            <h3>เพิ่มวิดีโอ (YouTube)</h3>
-            <form id="add-video-form" class="mt-2">
+        <div class="card admin-section" style="border-left: 4px solid var(--color-primary);">
+            <h3 class="admin-section-title">🎬 เพิ่มวิดีโอ (YouTube)</h3>
+            <form id="add-video-form">
                 <div class="form-group">
                     <label>เลือกคอร์ส</label>
                     <select id="v-courseId" class="form-control" required></select>
@@ -189,149 +66,39 @@
                     <input type="text" id="v-title" class="form-control" placeholder="เช่น Ep.4 - กฎของนิวตัน" required>
                 </div>
                 <div class="form-group">
-                    <label>รหัส YouTube (Video ID) หรือลิงก์เต็ม</label>
-                    <input type="text" id="v-videoId" class="form-control" placeholder="เช่น dQw4w9WgXcQ หรือ https://youtu.be/..." required>
+                    <label>รหัส YouTube (Video ID)</label>
+                    <input type="text" id="v-videoId" class="form-control" placeholder="เช่น dQw4w9WgXcQ" required>
                 </div>
                 <div class="form-group">
                     <label>ลิงก์เอกสารประกอบการเรียน (ถ้ามี)</label>
-                    <input type="text" id="v-documentUrl" class="form-control" placeholder="เช่น ลิงก์ Google Drive หรือ PDF">
+                    <input type="text" id="v-documentUrl" class="form-control" placeholder="ลิงก์ Google Drive หรือ PDF">
                 </div>
                 <button type="submit" class="btn btn-primary">เพิ่มวิดีโอ</button>
             </form>
         </div>
 
-        <!-- Add Simulation -->
-        <div class="card mb-4" style="border-top: 4px solid var(--color-secondary);">
-            <h3>➕ เพิ่มโปรแกรมจำลอง (Simulation)</h3>
-            
-            <div style="display:flex; gap:10px; margin: 15px 0 10px;">
-                <button type="button" id="btn-mode-upload" onclick="setSimMode('upload')" class="btn btn-primary" style="flex:1; padding:8px; font-size:0.9rem;">📂 อัปโหลดไฟล์ (.html / .zip)</button>
-                <button type="button" id="btn-mode-url" onclick="setSimMode('url')" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.9rem;">🔗 ใส่ URL ตรงๆ</button>
-            </div>
-
-            <form id="add-sim-form" class="mt-2">
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-                    <label style="min-width:120px;">โหมดสร้าง:</label>
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio" name="sim-mode" value="course" checked onchange="toggleStandalone(false)">
-                        <span>ผูกกับคอร์ส</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio" name="sim-mode" value="standalone" onchange="toggleStandalone(true)">
-                        <span>Standalone (ไม่ผูกคอร์ส)</span>
-                    </label>
-                </div>
-
-                <div id="sim-course-select">
-                    <div class="form-group">
-                        <label>เลือกคอร์สหลัก (เลือกได้หลายคอร์ส)</label>
-                        <div id="sim-course-checkboxes" class="course-select-grid"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>ชื่อโปรแกรมจำลอง</label>
-                    <input type="text" id="s-title" class="form-control" placeholder="เช่น จำลองแรงเสียดทาน" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Tag ครู (แยกประเภท)</label>
-                    <input type="text" id="s-teacher-tag" class="form-control" placeholder="เช่น ครูฟิสิกส์, ครูเคมี">
-                </div>
-
-                <!-- Upload Mode -->
-                <div id="sim-mode-upload">
-                    <div class="form-group">
-                        <label>เลือกไฟล์ <span style="color:#aaa; font-size:0.85rem;">(.html หรือ .zip ไม่เกิน 50MB)</span></label>
-                        <input type="file" id="s-file" class="form-control" accept=".html,.zip" style="padding:8px;">
-                        <p style="font-size:0.8rem; color:#aaa; margin-top:5px;">💡 ถ้าเป็นไฟล์ .zip ต้องมี <b>index.html</b> อยู่ในโฟลเดอร์หลักด้วยครับ</p>
-                        <div id="s-upload-status" style="display:none; padding:10px; border-radius:6px; margin-top:8px; font-size:0.9rem;"></div>
-                    </div>
-                </div>
-
-                <!-- URL Mode -->
-                <div id="sim-mode-url" style="display:none;">
-                    <div class="form-group">
-                        <label>ที่อยู่ไฟล์ (File URL)</label>
-                        <input type="text" id="s-fileUrl" class="form-control" placeholder="เช่น simulations/sim-motion.html หรือ https://...">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="background:var(--color-secondary); width:100%;">➕ เพิ่มโปรแกรมจำลอง</button>
-            </form>
-        </div>
-
-        <!-- Package Management -->
-        <div class="card mb-4" style="border-top: 4px solid #e74c3c;">
-            <h3>📦 จัดการแพ็คเรียน (Packages)</h3>
-            
-            <!-- Create Package Form -->
-            <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin:15px 0;">
-                <h4 style="margin:0 0 15px;">➕ สร้างแพ็คใหม่</h4>
-                <form id="add-package-form">
-                    <div class="form-group">
-                        <label>ชื่อแพ็ค</label>
-                        <input type="text" id="p-name" class="form-control" placeholder="เช่น แพ็คครบเซ็ต ฟิสิกส์" required>
-                    </div>
-                    <div class="form-group">
-                        <label>รายละเอียด</label>
-                        <textarea id="p-desc" class="form-control" rows="2" placeholder="อธิบายสั้นๆ"></textarea>
-                    </div>
-                    <div style="display:flex; gap:15px;">
-                        <div class="form-group" style="flex:1;">
-                            <label>ราคา (บาท)</label>
-                            <input type="number" id="p-price" class="form-control" placeholder="เช่น 990">
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label>ราคาเดิม (ถ้าลดราคา)</label>
-                            <input type="number" id="p-original" class="form-control" placeholder="เช่น 1500">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>เลือกคอร์สในแพ็ค</label>
-                        <div id="pkg-course-checkboxes" class="course-select-grid"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>เลือก Simulation ในแพ็ค</label>
-                        <div id="pkg-sim-checkboxes" class="course-select-grid"></div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" style="background:#e74c3c; border:none; width:100%;">📦 สร้างแพ็ค</button>
-                </form>
-            </div>
-            
-            <!-- Package List -->
-            <div id="package-list" class="mt-3">
-                <p class="text-muted">กำลังโหลด...</p>
-            </div>
-        </div>
-
         <!-- Pending Enrollments -->
-        <div class="card mb-4" style="border-top: 4px solid #f39c12;">
-            <h3>คำขอลงทะเบียนเรียน (Pending Enrollments)</h3>
-            <div id="pending-list" class="mt-2">
-                <p class="text-muted">กำลังโหลด...</p>
-            </div>
+        <div class="card admin-section" style="border-left: 4px solid #f39c12;">
+            <h3 class="admin-section-title">📋 คำขอลงทะเบียนเรียน</h3>
+            <div id="pending-list"></div>
         </div>
 
         <!-- Manage Content -->
-        <div class="card mb-4" style="border-top: 4px solid #16a085;">
-            <h3>จัดการเนื้อหา (Edit / Delete)</h3>
-            <div id="content-manage-list" class="mt-2"></div>
+        <div class="card admin-section" style="border-left: 4px solid #16a085;">
+            <h3 class="admin-section-title">📚 จัดการเนื้อหา</h3>
+            <div id="content-manage-list"></div>
         </div>
 
         <!-- Manage Active -->
-        <div class="card mb-4" style="border-top: 4px solid #e74c3c;">
-            <h3>จัดการการเข้าถึงคอร์ส (Active Enrollments)</h3>
-            <div id="active-list" class="mt-2"></div>
+        <div class="card admin-section" style="border-left: 4px solid #e74c3c;">
+            <h3 class="admin-section-title">✅ การเข้าถึงคอร์ส (Active)</h3>
+            <div id="active-list"></div>
         </div>
 
         <!-- Manage Users -->
-        <div class="card mb-4" style="border-top: 4px solid #9b59b6;">
-            <h3>จัดการผู้ใช้งานระบบ</h3>
-            <div id="users-list" class="mt-2"></div>
+        <div class="card admin-section" style="border-left: 4px solid #9b59b6;">
+            <h3 class="admin-section-title">👥 จัดการผู้ใช้งาน</h3>
+            <div id="users-list"></div>
         </div>
     </main>
 
@@ -343,240 +110,119 @@
 
     <script src="js/app.js"></script>
     <script>
-        let allSimulations = [];
-        let allPackages = [];
-
-        // --- Sim Mode Toggle ---
-        let currentSimMode = 'upload';
-        window.setSimMode = function(mode) {
-            currentSimMode = mode;
-            document.getElementById('sim-mode-upload').style.display = mode === 'upload' ? '' : 'none';
-            document.getElementById('sim-mode-url').style.display = mode === 'url' ? '' : 'none';
-            document.getElementById('btn-mode-upload').className = mode === 'upload' ? 'btn btn-primary' : 'btn btn-outline';
-            document.getElementById('btn-mode-url').className = mode === 'url' ? 'btn btn-primary' : 'btn btn-outline';
-        };
-
-        window.toggleStandalone = function(isStandalone) {
-            const courseSelect = document.getElementById('sim-course-select');
-            if (isStandalone) {
-                courseSelect.style.display = '';
-                courseSelect.querySelector('label').textContent = 'เลือกคอร์สที่จะแสดง (เลือกได้หลายคอร์ส)';
-            } else {
-                courseSelect.style.display = '';
-                courseSelect.querySelector('label').textContent = 'เลือกคอร์สหลัก (เลือกได้หลายคอร์ส)';
-            }
-        };
-
-        // --- Course Checkbox Helpers ---
-        function renderCourseCheckboxes(containerId, items, selectedIds, onChange) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = items.map(c => `
-                <label class="course-select-item ${selectedIds.includes(c.id) ? 'selected' : ''}">
-                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked' : ''} 
-                        onchange="${onChange}(this)">
-                    <span>${c.title}</span>
-                </label>
-            `).join('');
-        }
-
-        function updateCheckboxStyle(checkbox) {
-            const label = checkbox.closest('.course-select-item');
-            if (checkbox.checked) label.classList.add('selected');
-            else label.classList.remove('selected');
-        }
-
-        // --- Fetch Data ---
-        async function fetchAllSimulations() {
+        async function fetchPendingEnrollments() {
             try {
-                const res = await fetch(`${API_URL}/admin/simulations`, { headers: getAuthHeaders() });
-                if (res.ok) allSimulations = await res.json();
+                const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const pending = await res.json();
+                    const container = document.getElementById('pending-list');
+                    if (pending.length === 0) {
+                        container.innerHTML = '<p class="text-muted">ไม่มีคำขอใหม่</p>';
+                        return;
+                    }
+                    container.innerHTML = pending.map(e => `
+                        <div class="item-badge-row">
+                            <span><strong>${e.username}</strong> - ${e.courseTitle}</span>
+                            <button onclick="approveEnrollment(${e.id})" class="btn btn-sm btn-success">✅ อนุมัติ</button>
+                        </div>
+                    `).join('');
+                }
             } catch(e) { console.error(e); }
         }
 
-        async function fetchPackages() {
+        window.approveEnrollment = async function(id) {
+            const res = await fetch(`${API_URL}/admin/enrollments/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
+            if (res.ok) { alert('อนุมัติสำเร็จ!'); fetchPendingEnrollments(); }
+        };
+
+        async function fetchActiveEnrollments() {
             try {
-                const res = await fetch(`${API_URL}/admin/packages`, { headers: getAuthHeaders() });
-                if (res.ok) allPackages = await res.json();
-                renderPackages();
+                const res = await fetch(`${API_URL}/admin/enrollments/active`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const active = await res.json();
+                    const container = document.getElementById('active-list');
+                    if (active.length === 0) {
+                        container.innerHTML = '<p class="text-muted">ไม่มีการลงทะเบียนที่ active</p>';
+                        return;
+                    }
+                    container.innerHTML = active.map(e => `
+                        <div class="item-badge-row">
+                            <span><strong>${e.username}</strong> - ${e.courseTitle}</span>
+                            <button onclick="deleteEnrollment(${e.id})" class="btn btn-sm btn-danger-outline">❌ ลบ</button>
+                        </div>
+                    `).join('');
+                }
             } catch(e) { console.error(e); }
         }
 
-        // --- Package Management ---
-        function renderPackages() {
-            const container = document.getElementById('package-list');
-            if (allPackages.length === 0) {
-                container.innerHTML = '<p class="text-muted">ยังไม่มีแพ็คเรียน</p>';
-                return;
-            }
-            
-            let html = '';
-            allPackages.forEach(pkg => {
-                const discount = pkg.original_price > pkg.price ? Math.round((1 - pkg.price/pkg.original_price)*100) : 0;
-                html += `
-                <div class="package-card ${pkg.is_active ? '' : 'inactive'}">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div>
-                            <h4 style="margin:0;">${pkg.name}</h4>
-                            <p style="font-size:0.9rem; color:#aaa; margin:5px 0;">${pkg.description || ''}</p>
+        window.deleteEnrollment = async function(id) {
+            if (!confirm('ยืนยันการลบ?')) return;
+            await fetch(`${API_URL}/admin/enrollments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            fetchActiveEnrollments();
+        };
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const users = await res.json();
+                    const container = document.getElementById('users-list');
+                    container.innerHTML = users.map(u => `
+                        <div class="item-badge-row">
+                            <span><strong>${u.username}</strong> (${u.role})</span>
+                            <select onchange="changeRole(${u.id}, this.value)" class="form-control" style="width:auto;">
+                                <option value="student" ${u.role==='student'?'selected':''}>นักเรียน</option>
+                                <option value="teacher" ${u.role==='teacher'?'selected':''}>ครู</option>
+                                <option value="admin" ${u.role==='admin'?'selected':''}>แอดมิน</option>
+                            </select>
                         </div>
-                        <div style="text-align:right;">
-                            <span class="package-price">฿${pkg.price.toLocaleString()}</span>
-                            ${pkg.original_price > pkg.price ? `<br><span class="package-original">฿${pkg.original_price.toLocaleString()}</span>` : ''}
-                            ${discount > 0 ? `<br><span style="color:#e74c3c; font-size:0.8rem;">ลด ${discount}%</span>` : ''}
-                        </div>
-                    </div>
-                    ${pkg.cover_url ? `<img src="${pkg.cover_url}" class="cover-preview" alt="cover">` : ''}
-                    <div style="margin-top:10px;">
-                        <p style="font-size:0.85rem; color:#aaa; margin:5px 0;">📚 คอร์ส: ${pkg.courses?.length || 0} คอร์ส</p>
-                        <p style="font-size:0.85rem; color:#aaa; margin:5px 0;">🖥️ Simulation: ${pkg.simulations?.length || 0} อัน</p>
-                    </div>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button onclick="editPackage(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
-                        <button onclick="changePackageCover(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem;">🖼️ เปลี่ยนหน้าปก</button>
-                        <button onclick="deletePackage(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
+                    `).join('');
+                }
+            } catch(e) { console.error(e); }
         }
 
-        window.editPackage = function(id) {
-            const pkg = allPackages.find(p => p.id === id);
-            const name = prompt('ชื่อแพ็ค:', pkg.name);
-            if (name === null) return;
-            const description = prompt('รายละเอียด:', pkg.description || '');
-            if (description === null) return;
-            const price = prompt('ราคา:', pkg.price);
-            if (price === null) return;
-            const originalPrice = prompt('ราคาเดิม:', pkg.original_price);
-            if (originalPrice === null) return;
-            
-            const isActive = confirm('แพ็คนี้ยังใช้งานอยู่หรือไม่? (OK = ใช้งาน, Cancel = ปิด)') ? true : false;
-            
-            fetch(`${API_URL}/packages/${id}`, {
+        window.changeRole = async function(id, role) {
+            await fetch(`${API_URL}/admin/users/${id}/role`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ 
-                    name, description, 
-                    price: parseFloat(price) || 0,
-                    originalPrice: parseFloat(originalPrice) || 0,
-                    isActive,
-                    courseIds: pkg.courses?.map(c => c.id) || [],
-                    simulationIds: pkg.simulations?.map(s => s.id) || []
-                })
-            }).then(() => fetchPackages());
+                body: JSON.stringify({ role })
+            });
+            fetchUsers();
         };
 
-        window.changePackageCover = function(id) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const formData = new FormData();
-                formData.append('cover', file);
-                const token = localStorage.getItem('jwt_token');
-                const res = await fetch(`${API_URL}/packages/${id}/cover`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                if (res.ok) fetchPackages();
-                else alert('อัปโหลดหน้าปกล้มเหลว');
-            };
-            input.click();
-        };
-
-        window.deletePackage = async function(id) {
-            if (!confirm('ยืนยันการลบแพ็คนี้?')) return;
-            await fetch(`${API_URL}/packages/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchPackages();
-        };
-
-        // --- Content Management ---
         function renderContentManage() {
             const container = document.getElementById('content-manage-list');
             if (courses.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์สเรียน</p>'; return; }
             let html = '';
             courses.forEach(c => {
-                html += `<div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #16a085;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <h4 style="margin:0; color:#1abc9c;">📚 ${c.title}</h4>
-                            <button onclick="changeCourseCover(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.7rem;">🖼️ หน้าปก</button>
-                        </div>
+                html += `
+                <div class="course-card-admin">
+                    <div class="admin-section-header">
+                        <h4 style="margin:0;">📚 ${c.title}</h4>
                         <div>
-                            <button onclick="editCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
-                            <button onclick="deleteCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
+                            <button onclick="deleteCourse(${c.id})" class="btn btn-sm btn-danger-outline">🗑️ ลบ</button>
                         </div>
                     </div>
-                    ${c.cover_url ? `<img src="${c.cover_url}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">` : ''}
-                    <p style="font-size:0.9rem; margin-bottom:10px;">${c.description}</p>
-                    <div style="padding-left:20px; border-left:2px dashed rgba(255,255,255,0.1);">
-                        <p style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">วิดีโอ (${c.lessons ? c.lessons.length : 0})</p>`;
-                if(c.lessons) c.lessons.forEach(l => {
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
-                        <span>▶️ ${l.title}</span>
-                        <div>
-                            <button onclick="editLesson(${l.id}, ${c.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
-                            <button onclick="deleteLesson(${l.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
-                        </div>
-                    </div>`;
+                    ${c.cover_url ? `<img src="${c.cover_url}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
+                    <p style="font-size:0.9rem;margin-bottom:10px;">${c.description}</p>
+                    <div style="border-left:2px dashed rgba(255,255,255,0.1);padding-left:15px;">
+                        <p style="font-size:0.85rem;color:#aaa;">วิดีโอ (${c.lessons?.length || 0})</p>`;
+                c.lessons?.forEach(l => {
+                    html += `<div class="item-badge-row"><span>▶️ ${l.title}</span><button onclick="deleteLesson(${l.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`;
                 });
-                html += `<p style="font-size:0.85rem; color:#aaa; margin-top:10px; margin-bottom:5px;">โปรแกรมจำลอง (${c.simulations ? c.simulations.length : 0})</p>`;
-                if(c.simulations) c.simulations.forEach(s => {
-                    const tags = s.teacher_tag ? s.teacher_tag.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
-                        <span>🖥️ ${s.title} ${tags}</span>
-                        <div>
-                            <button onclick="editSim(${s.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
-                            <button onclick="deleteSim(${s.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
-                        </div>
-                    </div>`;
+                html += `<p style="font-size:0.85rem;color:#aaa;margin-top:10px;">โปรแกรมจำลอง (${c.simulations?.length || 0})</p>`;
+                c.simulations?.forEach(s => {
+                    html += `<div class="item-badge-row"><span>🖥️ ${s.title}</span><button onclick="deleteSim(${s.id})" class="btn btn-sm btn-danger-outline">ลบ</button></div>`;
                 });
                 html += `</div></div>`;
             });
             container.innerHTML = html;
         }
 
-        window.changeCourseCover = async function(id) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const formData = new FormData();
-                formData.append('cover', file);
-                const token = localStorage.getItem('jwt_token');
-                const res = await fetch(`${API_URL}/courses/${id}/cover`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                if (res.ok) { alert('อัปโหลดหน้าปกสำเร็จ!'); fetchCourses(); }
-                else alert('อัปโหลดหน้าปกล้มเหลว');
-            };
-            input.click();
-        };
-
-        window.editCourse = async function(id) {
-            const course = courses.find(c => c.id === id);
-            openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
-        };
-
         window.deleteCourse = async function(id) {
-            if(!confirm('คำเตือน: การลบคอร์สจะลบเนื้อหาและนักเรียนที่ลงเรียนทั้งหมด! ยืนยันหรือไม่?')) return;
+            if(!confirm('คำเตือน: ลบคอร์สจะลบทุกอย่าง!')) return;
             await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             fetchCourses();
-        };
-
-        window.editLesson = async function(id, cId) {
-            const course = courses.find(c => c.id === cId);
-            const lesson = course.lessons.find(l => l.id === id);
-            openModal('lesson', { id: lesson.id, title: lesson.title, video_id: lesson.video_id, document_url: lesson.document_url });
         };
 
         window.deleteLesson = async function(id) {
@@ -585,88 +231,21 @@
             fetchCourses();
         };
 
-        window.editSim = async function(id) {
-            const sim = allSimulations.find(s => s.id === id);
-            if (!sim) {
-                // Find from courses
-                for (const c of courses) {
-                    const found = c.simulations?.find(s => s.id === id);
-                    if (found) {
-                        openModal('simulation', { id: found.id, title: found.title, file_url: found.file_url, teacher_tag: found.teacher_tag });
-                        return;
-                    }
-                }
-                return;
-            }
-            openModal('simulation', { id: sim.id, title: sim.title, file_url: sim.file_url, teacher_tag: sim.teacher_tag });
-        };
-
         window.deleteSim = async function(id) {
             if(!confirm('ลบโปรแกรมจำลองนี้?')) return;
             await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             fetchCourses();
-            fetchAllSimulations();
-        };
-
-        function initAdmin() {
-            const vSelect = document.getElementById('v-courseId');
-            const sSelect = document.getElementById('s-courseId');
-            let options = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
-            vSelect.innerHTML = options;
-            sSelect.innerHTML = options;
-
-            // Render course checkboxes for simulation
-            renderCourseCheckboxes('sim-course-checkboxes', courses, [], 'toggleSimCourse');
-            
-            // Render course checkboxes for package
-            renderCourseCheckboxes('pkg-course-checkboxes', courses, [], 'togglePkgCourse');
-            
-            // Render simulation checkboxes for package
-            if (allSimulations.length > 0) {
-                renderCourseCheckboxes('pkg-sim-checkboxes', allSimulations, [], 'togglePkgSim');
-            }
-
-            renderContentManage();
-        }
-
-        // Checkbox toggles
-        const selectedSimCourses = new Set();
-        const selectedPkgCourses = new Set();
-        const selectedPkgSims = new Set();
-
-        window.toggleSimCourse = function(cb) {
-            const id = parseInt(cb.value);
-            if (cb.checked) selectedSimCourses.add(id);
-            else selectedSimCourses.delete(id);
-            updateCheckboxStyle(cb);
-        };
-
-        window.togglePkgCourse = function(cb) {
-            const id = parseInt(cb.value);
-            if (cb.checked) selectedPkgCourses.add(id);
-            else selectedPkgCourses.delete(id);
-            updateCheckboxStyle(cb);
-        };
-
-        window.togglePkgSim = function(cb) {
-            const id = parseInt(cb.value);
-            if (cb.checked) selectedPkgSims.add(id);
-            else selectedPkgSims.delete(id);
-            updateCheckboxStyle(cb);
         };
 
         document.addEventListener('coursesLoaded', async () => {
-            await fetchAllSimulations();
-            initAdmin();
-            fetchPackages();
+            renderContentManage();
+            fetchPendingEnrollments();
+            fetchActiveEnrollments();
+            fetchUsers();
         });
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (courses.length > 0) {
-                await fetchAllSimulations();
-                initAdmin();
-                fetchPackages();
-            }
+            renderContentManage();
             fetchPendingEnrollments();
             fetchActiveEnrollments();
             fetchUsers();
@@ -705,299 +284,15 @@
                 if (res.ok) { alert('เพิ่มวิดีโอสำเร็จ!'); e.target.reset(); fetchCourses(); }
             });
 
-            // Simulation form
-            document.getElementById('add-sim-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = document.getElementById('s-title').value;
-                const teacherTag = document.getElementById('s-teacher-tag').value;
-                const statusEl = document.getElementById('s-upload-status');
-                const isStandalone = document.querySelector('input[name="sim-mode"]:checked').value === 'standalone';
-                const courseIds = Array.from(selectedSimCourses);
-
-                let fileUrl = '';
-
-                if (currentSimMode === 'upload') {
-                    const fileInput = document.getElementById('s-file');
-                    if (!fileInput.files[0]) { alert('กรุณาเลือกไฟล์ก่อนครับ'); return; }
-
-                    statusEl.style.display = '';
-                    statusEl.style.background = 'rgba(52,152,219,0.2)';
-                    statusEl.textContent = '⏳ กำลังอัปโหลดไฟล์...';
-
-                    const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
-
-                    const token = localStorage.getItem('jwt_token');
-                    const uploadRes = await fetch(`${API_URL}/simulations/upload`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: formData
-                    });
-                    const uploadData = await uploadRes.json();
-
-                    if (!uploadRes.ok) {
-                        statusEl.style.background = 'rgba(231,76,60,0.2)';
-                        statusEl.textContent = `❌ อัปโหลดล้มเหลว: ${uploadData.error}`;
-                        return;
-                    }
-
-                    fileUrl = uploadData.url;
-                    statusEl.style.background = 'rgba(46,204,113,0.2)';
-                    statusEl.textContent = `✅ อัปโหลดสำเร็จ: ${fileUrl}`;
-                } else {
-                    fileUrl = document.getElementById('s-fileUrl').value;
-                    if (!fileUrl) { alert('กรุณากรอก URL ของไฟล์ครับ'); return; }
+            // Populate course select
+            const populateCourseSelect = setInterval(() => {
+                if (typeof courses !== 'undefined' && courses.length > 0) {
+                    clearInterval(populateCourseSelect);
+                    const select = document.getElementById('v-courseId');
+                    select.innerHTML = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
                 }
-
-                let res;
-                if (isStandalone) {
-                    // Create standalone simulation
-                    res = await fetch(`${API_URL}/simulations`, {
-                        method: 'POST',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ title, fileUrl, teacherTag, courseIds })
-                    });
-                } else {
-                    // Create with main course
-                    const mainCourseId = courseIds.length > 0 ? courseIds[0] : null;
-                    if (!mainCourseId) { alert('กรุณาเลือกคอร์สอย่างน้อย 1 คอร์ส'); return; }
-                    const extraCourseIds = courseIds.slice(1);
-                    res = await fetch(`${API_URL}/courses/${mainCourseId}/simulations`, {
-                        method: 'POST',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ title, fileUrl, teacherTag, extraCourseIds })
-                    });
-                }
-
-                if (res.ok) {
-                    alert('เพิ่มโปรแกรมจำลองสำเร็จ!');
-                    e.target.reset();
-                    if (statusEl) statusEl.style.display = 'none';
-                    selectedSimCourses.clear();
-                    fetchCourses();
-                    fetchAllSimulations();
-                    renderCourseCheckboxes('sim-course-checkboxes', courses, [], 'toggleSimCourse');
-                }
-            });
-
-            // Package form
-            document.getElementById('add-package-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('p-name').value;
-                const description = document.getElementById('p-desc').value;
-                const price = parseFloat(document.getElementById('p-price').value) || 0;
-                const originalPrice = parseFloat(document.getElementById('p-original').value) || 0;
-                const courseIds = Array.from(selectedPkgCourses);
-                const simulationIds = Array.from(selectedPkgSims);
-
-                const res = await fetch(`${API_URL}/packages`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ name, description, price, originalPrice, courseIds, simulationIds })
-                });
-
-                if (res.ok) {
-                    alert('สร้างแพ็คสำเร็จ!');
-                    e.target.reset();
-                    selectedPkgCourses.clear();
-                    selectedPkgSims.clear();
-                    fetchPackages();
-                    renderCourseCheckboxes('pkg-course-checkboxes', courses, [], 'togglePkgCourse');
-                    renderCourseCheckboxes('pkg-sim-checkboxes', allSimulations, [], 'togglePkgSim');
-                }
-            });
+            }, 100);
         });
-
-        async function fetchPendingEnrollments() {
-            try {
-                const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() });
-                if (res.ok) renderPending(await res.json());
-            } catch(e) {}
-        }
-
-        function renderPending(list) {
-            const container = document.getElementById('pending-list');
-            if (list.length === 0) { container.innerHTML = '<p class="text-muted" style="margin-top:15px;">ไม่มีคำขอลงทะเบียนที่รออนุมัติ</p>'; return; }
-            let html = '<ul style="list-style:none; padding:0; margin-top:15px;">';
-            list.forEach(item => {
-                html += `<li style="display:flex; justify-content:space-between; align-items:center; padding:15px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; margin-bottom:10px; background:rgba(0,0,0,0.2);">
-                    <span>👤 <b>${item.username}</b> ขอเข้าเรียน <b>${item.courseTitle}</b></span>
-                    <button onclick="approveEnrollment(${item.id})" class="btn btn-primary" style="padding:5px 15px; font-size:0.9rem; background:#27ae60;">✅ อนุมัติ</button>
-                </li>`;
-            });
-            container.innerHTML = html + '</ul>';
-        }
-
-        window.approveEnrollment = async function(id) {
-            if(!confirm('ยืนยันการอนุมัติ?')) return;
-            const res = await fetch(`${API_URL}/admin/enrollments/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
-            if (res.ok) { alert('อนุมัติสำเร็จ'); fetchPendingEnrollments(); fetchActiveEnrollments(); }
-        };
-
-        async function fetchActiveEnrollments() {
-            try {
-                const res = await fetch(`${API_URL}/admin/enrollments/active`, { headers: getAuthHeaders() });
-                if (!res.ok) return;
-                const data = await res.json();
-                const c = document.getElementById('active-list');
-                if (data.length === 0) { c.innerHTML = '<p class="text-muted">ไม่มีผู้เรียนในขณะนี้</p>'; return; }
-                let html = '<ul style="list-style:none; padding:0;">';
-                data.forEach(i => {
-                    const exp = i.expires_at ? new Date(i.expires_at).toLocaleDateString() : 'ตลอดชีพ';
-                    html += `<li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
-                        <span>👤 ${i.username} - 📚 ${i.courseTitle} <small style="color:#aaa;">(หมดอายุ: ${exp})</small></span>
-                        <button onclick="revokeAccess(${i.id})" class="btn btn-primary" style="background:#e74c3c; border:none; padding:5px 10px;">❌ ดึงสิทธิ์คืน</button>
-                    </li>`;
-                });
-                c.innerHTML = html + '</ul>';
-            } catch(e) {}
-        }
-
-        window.revokeAccess = async function(id) {
-            if(!confirm('ยืนยันดึงสิทธิ์การเรียนคืน?')) return;
-            await fetch(`${API_URL}/admin/enrollments/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchActiveEnrollments();
-        };
-
-        async function fetchUsers() {
-            try {
-                const res = await fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() });
-                if (!res.ok) return;
-                const data = await res.json();
-                const c = document.getElementById('users-list');
-                let html = '<ul style="list-style:none; padding:0;">';
-                data.forEach(u => {
-                    html += `<li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
-                        <span>👤 ${u.username}</span>
-                        <select onchange="changeRole(${u.id}, this.value)" style="padding:5px; border-radius:5px; background:rgba(0,0,0,0.5); color:white; border:none;">
-                            <option value="student" ${u.role==='student'?'selected':''}>Student</option>
-                            <option value="teacher" ${u.role==='teacher'?'selected':''}>Teacher</option>
-                            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-                        </select>
-                    </li>`;
-                });
-                c.innerHTML = html + '</ul>';
-            } catch(e) {}
-        }
-
-        window.changeRole = async function(id, role) {
-            await fetch(`${API_URL}/admin/users/${id}/role`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ role }) });
-            alert('อัปเดตสิทธิ์สำเร็จ');
-        };
     </script>
-<script>
-// Modal handling utilities
-let currentEdit = {};
-function openModal(type, data) {
-    currentEdit = { type, id: data.id, parentId: data.parentId };
-    const modal = document.getElementById('edit-modal');
-    const titleEl = document.getElementById('modal-title');
-    const fieldsContainer = document.getElementById('modal-fields');
-    fieldsContainer.innerHTML = '';
-    if (type === 'course') {
-        titleEl.textContent = 'แก้ไขคอร์สเรียน';
-        fieldsContainer.innerHTML = `
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>ชื่อคอร์ส</label>
-                <input type="text" id="modal-course-title" class="form-control" value="${data.title}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>รายละเอียด</label>
-                <textarea id="modal-course-desc" class="form-control" rows="2" required>${data.description}</textarea>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>อายุคอร์ส (วัน) (ว่าง = ตลอดชีพ)</label>
-                <input type="number" id="modal-course-duration" class="form-control" value="${data.duration_days || ''}">
-            </div>`;
-    } else if (type === 'lesson') {
-        titleEl.textContent = 'แก้ไขวิดีโอ';
-        fieldsContainer.innerHTML = `
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>ชื่อวิดีโอ</label>
-                <input type="text" id="modal-lesson-title" class="form-control" value="${data.title}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>รหัส YouTube (หรือ URL)</label>
-                <input type="text" id="modal-lesson-videoId" class="form-control" value="${data.video_id}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>ลิงก์เอกสาร (optional)</label>
-                <input type="text" id="modal-lesson-docUrl" class="form-control" value="${data.document_url || ''}">
-            </div>`;
-    } else if (type === 'simulation') {
-        titleEl.textContent = 'แก้ไขโปรแกรมจำลอง';
-        fieldsContainer.innerHTML = `
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>ชื่อโปรแกรมจำลอง</label>
-                <input type="text" id="modal-sim-title" class="form-control" value="${data.title}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>URL ไฟล์</label>
-                <input type="text" id="modal-sim-url" class="form-control" value="${data.file_url}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>Tag ครู</label>
-                <input type="text" id="modal-sim-tag" class="form-control" value="${data.teacher_tag || ''}" placeholder="เช่น ครูฟิสิกส์">
-            </div>`;
-    }
-    modal.style.display = 'flex';
-}
-function closeModal() {
-    document.getElementById('edit-modal').style.display = 'none';
-    currentEdit = {};
-}
-document.getElementById('modal-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const { type, id } = currentEdit;
-    if (type === 'course') {
-        const title = document.getElementById('modal-course-title').value.trim();
-        const description = document.getElementById('modal-course-desc').value.trim();
-        const durationDays = document.getElementById('modal-course-duration').value;
-        await fetch(`${API_URL}/courses/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ title, description, durationDays })
-        });
-    } else if (type === 'lesson') {
-        const title = document.getElementById('modal-lesson-title').value.trim();
-        let videoId = document.getElementById('modal-lesson-videoId').value.trim();
-        const documentUrl = document.getElementById('modal-lesson-docUrl').value.trim();
-        const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&?]*).*/);
-        if (match && match[2].length === 11) videoId = match[2];
-        await fetch(`${API_URL}/lessons/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ title, videoId, documentUrl })
-        });
-    } else if (type === 'simulation') {
-        const title = document.getElementById('modal-sim-title').value.trim();
-        const fileUrl = document.getElementById('modal-sim-url').value.trim();
-        const teacherTag = document.getElementById('modal-sim-tag').value.trim();
-        await fetch(`${API_URL}/simulations/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ title, fileUrl, teacherTag })
-        });
-    }
-    closeModal();
-    fetchCourses();
-    fetchAllSimulations();
-});
-</script>
-
-<!-- Edit Modal -->
-<div id="edit-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:var(--bg-card); border-radius:12px; padding:25px; max-width:500px; width:90%; border:1px solid rgba(255,255,255,0.2);">
-        <h3 id="modal-title" style="margin:0 0 15px;">แก้ไข</h3>
-        <form id="modal-form">
-            <div id="modal-fields"></div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button type="submit" class="btn btn-primary" style="flex:1;">💾 บันทึก</button>
-                <button type="button" onclick="closeModal()" class="btn btn-outline" style="flex:1;">ยกเลิก</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 </body>
 </html>

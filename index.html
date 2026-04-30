@@ -9,24 +9,28 @@
         .carousel-section {
             margin: 40px 0;
         }
-        .section-title {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        .section-title h2 {
-            margin: 0;
+        .section-nav-btns {
+            display: flex;
+            gap: 10px;
         }
-        .carousel-container {
+        .carousel-viewport {
             position: relative;
+            overflow: hidden;
+            margin: 0 -20px;
+            padding: 0 20px;
         }
         .carousel-track {
             display: flex;
             gap: 20px;
             overflow-x: auto;
             scroll-behavior: smooth;
-            padding: 10px 0 20px;
+            padding: 10px 5px 20px;
             scrollbar-width: thin;
             scrollbar-color: var(--color-primary) rgba(255,255,255,0.1);
         }
@@ -41,108 +45,75 @@
             background: var(--color-primary);
             border-radius: 4px;
         }
-        .carousel-card {
+        .carousel-item {
             min-width: 300px;
             flex-shrink: 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .carousel-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .carousel-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--color-primary);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            z-index: 10;
-            font-size: 1.2rem;
+        .carousel-item .card {
+            height: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
         }
-        .carousel-nav:hover {
-            background: var(--color-secondary);
-        }
-        .carousel-nav.prev { left: -20px; }
-        .carousel-nav.next { right: -20px; }
-        
-        /* Package specific styles */
-        .package-card {
-            border-left: 4px solid #e74c3c;
-        }
-        .package-price {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #e74c3c;
-        }
-        .package-original {
-            font-size: 1rem;
-            color: #999;
-            text-decoration: line-through;
-            margin-left: 10px;
-        }
-        .package-discount {
-            display: inline-block;
-            background: #e74c3c;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-left: 10px;
-        }
-        .package-cover {
+        .carousel-item .card-image {
             width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .package-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin: 10px 0;
-        }
-        .package-item-badge {
-            background: rgba(168, 85, 247, 0.2);
-            color: var(--color-primary);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-        
-        /* Course specific styles */
-        .course-card {
-            border-left: 4px solid var(--color-primary);
-        }
-        .course-cover {
-            width: 100%;
-            height: 150px;
+            height: 160px;
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 15px;
             background: rgba(255,255,255,0.1);
         }
-        .course-price {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .carousel-item .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .carousel-item .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            flex: 1;
+        }
+        .carousel-item .card-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .carousel-item .card-price {
+            font-size: 1.4rem;
+            font-weight: 700;
             color: var(--color-primary);
         }
-        
+        .carousel-item .card-original {
+            font-size: 0.9rem;
+            color: #999;
+            text-decoration: line-through;
+            margin-left: 8px;
+        }
+        .carousel-item .card-discount {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .carousel-item .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .carousel-item .tag {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--color-primary);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+        }
         .empty-carousel {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--text-muted);
         }
     </style>
 </head>
@@ -150,50 +121,47 @@
     <header>
         <div class="container nav-container">
             <a href="index.html" class="logo">Grow Up Study</a>
-            <div class="nav-links" id="auth-nav">
-                <!-- Auth buttons injected by app.js -->
-            </div>
+            <div class="nav-links" id="auth-nav"></div>
         </div>
     </header>
 
-    <main class="container hero">
-        <div>
-            <h1>ปลดล็อกคะแนนฟิสิกส์ ม.ปลาย</h1>
-            <p>เรียนสนุก เข้าใจง่าย ลุยโจทย์ A-Level 70+ อัปสกิลฟิสิกส์ให้ทะลุขีดจำกัดด้วยเทคนิคสุดล้ำ</p>
-            <div>
-                <a href="login.html" class="btn btn-primary">เริ่มเรียนฟรีเลยตอนนี้</a>
-                <a href="#packages" class="btn btn-outline" style="margin-left: 10px;">ดูแพ็คเรียนของเรา</a>
-            </div>
+    <section class="hero">
+        <div class="container">
+            <h1>เรียนฟิสิกส์ออนไลน์<br>เตรียมสอบเข้ามหาวิทยาลัย</h1>
+            <p>ระบบเรียนออนไลน์ที่ครบวงจร พร้อมโปรแกรมจำลอง (Simulation) ช่วยให้เข้าใจทฤษฎีได้ดียิ่งขึ้น</p>
+            <a href="login.html" class="btn btn-primary" style="padding: 15px 40px; font-size: 1.1rem;">เริ่มเรียนฟรี</a>
         </div>
-    </main>
+    </section>
 
     <!-- Packages Carousel -->
-    <section id="packages" class="container carousel-section">
-        <div class="section-title">
+    <section class="container carousel-section" id="packages-section">
+        <div class="section-header">
             <h2>📦 แพ็คเรียนพิเศษ</h2>
-            <span style="color: var(--color-primary);">เลื่อนดูเพิ่มเติม →</span>
-        </div>
-        <div class="carousel-container">
-            <button class="carousel-nav prev" onclick="scrollCarousel('packages-track', -1)">‹</button>
-            <div class="carousel-track" id="packages-track">
-                <!-- Package cards injected by JS -->
+            <div class="section-nav-btns">
+                <button onclick="scrollCarousel('packages-track', -1)" class="btn btn-outline" style="padding: 8px 12px;">‹</button>
+                <button onclick="scrollCarousel('packages-track', 1)" class="btn btn-outline" style="padding: 8px 12px;">›</button>
             </div>
-            <button class="carousel-nav next" onclick="scrollCarousel('packages-track', 1)">›</button>
+        </div>
+        <div class="carousel-viewport">
+            <div class="carousel-track" id="packages-track">
+                <div class="empty-carousel">กำลังโหลด...</div>
+            </div>
         </div>
     </section>
 
     <!-- Courses Carousel -->
-    <section id="courses" class="container carousel-section">
-        <div class="section-title">
-            <h2>📚 คอร์สเรียนทั้งหมด</h2>
-            <span style="color: var(--color-primary);">เลื่อนดูเพิ่มเติม →</span>
-        </div>
-        <div class="carousel-container">
-            <button class="carousel-nav prev" onclick="scrollCarousel('courses-track', -1)">‹</button>
-            <div class="carousel-track" id="courses-track">
-                <!-- Course cards injected by JS -->
+    <section class="container carousel-section" id="courses-section">
+        <div class="section-header">
+            <h2>📚 คอร์สเรียน</h2>
+            <div class="section-nav-btns">
+                <button onclick="scrollCarousel('courses-track', -1)" class="btn btn-outline" style="padding: 8px 12px;">‹</button>
+                <button onclick="scrollCarousel('courses-track', 1)" class="btn btn-outline" style="padding: 8px 12px;">›</button>
             </div>
-            <button class="carousel-nav next" onclick="scrollCarousel('courses-track', 1)">›</button>
+        </div>
+        <div class="carousel-viewport">
+            <div class="carousel-track" id="courses-track">
+                <div class="empty-carousel">กำลังโหลด...</div>
+            </div>
         </div>
     </section>
 
@@ -231,7 +199,6 @@
                 if (res.ok) {
                     packages = await res.json();
                     renderPackages();
-                    renderCourses();
                 }
             } catch(e) { console.error(e); }
         }
@@ -250,25 +217,22 @@
                 const simNames = pkg.simulations?.map(s => s.title).slice(0, 3) || [];
                 
                 html += `
-                <div class="carousel-card package-card">
-                    ${pkg.cover_url ? `<img src="${pkg.cover_url}" class="package-cover" alt="${pkg.name}">` : ''}
-                    <h3 style="margin: 0 0 10px;">${pkg.name}</h3>
-                    <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 10px;">${pkg.description || ''}</p>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <span class="package-price">฿${pkg.price.toLocaleString()}</span>
-                        ${pkg.original_price > pkg.price ? `<span class="package-original">฿${pkg.original_price.toLocaleString()}</span>` : ''}
-                        ${discount > 0 ? `<span class="package-discount">ลด ${discount}%</span>` : ''}
+                <div class="carousel-item">
+                    <div class="card" style="border-left: 4px solid #e74c3c;">
+                        ${pkg.cover_url ? `<img src="${pkg.cover_url}" class="card-image" alt="${pkg.name}">` : '<div class="card-image"></div>'}
+                        <h3 class="card-title">${pkg.name}</h3>
+                        <p class="card-desc">${pkg.description || ''}</p>
+                        <div class="card-tags">
+                            ${courseNames.map(n => `<span class="tag">📚 ${n}</span>`).join('')}
+                            ${simNames.map(n => `<span class="tag">🖥️ ${n}</span>`).join('')}
+                        </div>
+                        <div style="margin-top: auto;">
+                            <span class="card-price">฿${pkg.price.toLocaleString()}</span>
+                            ${pkg.original_price > pkg.price ? `<span class="card-original">฿${pkg.original_price.toLocaleString()}</span>` : ''}
+                            ${discount > 0 ? `<span class="card-discount">ลด ${discount}%</span>` : ''}
+                            <a href="login.html" class="btn btn-primary btn-block" style="margin-top: 15px; background: #e74c3c;">ซื้อเลย</a>
+                        </div>
                     </div>
-                    
-                    <div class="package-items">
-                        ${courseNames.map(n => `<span class="package-item-badge">📚 ${n}</span>`).join('')}
-                        ${simNames.map(n => `<span class="package-item-badge">🖥️ ${n}</span>`).join('')}
-                    </div>
-                    
-                    <a href="login.html" class="btn btn-primary btn-block" style="margin-top: 15px; background: #e74c3c; border: none;">
-                        ซื้อเลย
-                    </a>
                 </div>`;
             });
             container.innerHTML = html;
@@ -276,7 +240,7 @@
         
         function renderCourses() {
             const container = document.getElementById('courses-track');
-            if (courses.length === 0) {
+            if (typeof courses === 'undefined' || courses.length === 0) {
                 container.innerHTML = '<div class="empty-carousel">ยังไม่มีคอร์สเรียนในขณะนี้</div>';
                 return;
             }
@@ -284,16 +248,14 @@
             let html = '';
             courses.forEach(c => {
                 html += `
-                <div class="carousel-card course-card">
-                    ${c.cover_url ? `<img src="${c.cover_url}" class="course-cover" alt="${c.title}">` : ''}
-                    <h3 style="margin: 0 0 10px;">${c.title}</h3>
-                    <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 10px;">${c.description || ''}</p>
-                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">
-                        📚 ${c.lessons?.length || 0} วิดีโอ | 🖥️ ${c.simulations?.length || 0} Simulation
-                    </p>
-                    <a href="login.html" class="btn btn-outline btn-block">
-                        ลงทะเบียนเรียน
-                    </a>
+                <div class="carousel-item">
+                    <div class="card" style="border-left: 4px solid var(--color-primary);">
+                        ${c.cover_url ? `<img src="${c.cover_url}" class="card-image" alt="${c.title}">` : '<div class="card-image"></div>'}
+                        <h3 class="card-title">${c.title}</h3>
+                        <p class="card-desc">${c.description || ''}</p>
+                        <p class="card-meta">📚 ${c.lessons?.length || 0} วิดีโอ | 🖥️ ${c.simulations?.length || 0} Simulation</p>
+                        <a href="login.html" class="btn btn-outline btn-block" style="margin-top: auto;">ลงทะเบียนเรียน</a>
+                    </div>
                 </div>`;
             });
             container.innerHTML = html;
@@ -301,26 +263,20 @@
         
         function scrollCarousel(trackId, direction) {
             const track = document.getElementById(trackId);
-            const cardWidth = 320; // Approximate card width + gap
-            track.scrollBy({ left: cardWidth * direction, behavior: 'smooth' });
+            const scrollAmount = 320 * direction;
+            track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch packages when courses are loaded
-            const originalFetchCourses = fetchCourses;
-            window.fetchCourses = async function() {
-                await originalFetchCourses();
-                await fetchPackages();
-            };
-            
-            // Initial load
-            if (typeof fetchCourses === 'function') {
-                fetchCourses();
-            }
+        document.addEventListener('coursesLoaded', async () => {
+            renderCourses();
+            await fetchPackages();
         });
         
-        document.addEventListener('coursesLoaded', async () => {
-            await fetchPackages();
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof courses !== 'undefined' && courses.length > 0) {
+                renderCourses();
+                await fetchPackages();
+            }
         });
     </script>
 </body>

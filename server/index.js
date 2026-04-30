@@ -370,6 +370,7 @@ app.post('/api/lessons/:id/complete', authenticateToken, async (req, res) => {
     }
 });
 
+// Create simulation linked to a course
 app.post('/api/courses/:id/simulations', authenticateToken, isAdmin, async (req, res) => {
     const courseId = req.params.id;
     const { title, fileUrl, teacherTag, extraCourseIds } = req.body;
@@ -387,6 +388,24 @@ app.post('/api/courses/:id/simulations', authenticateToken, isAdmin, async (req,
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to add simulation' });
+    }
+});
+
+// Create standalone simulation (no course required)
+app.post('/api/simulations', authenticateToken, isAdmin, async (req, res) => {
+    const { title, fileUrl, teacherTag, courseIds } = req.body;
+    try {
+        const db = await getDb();
+        const result = await db.run('INSERT INTO simulations (course_id, title, file_url, teacher_tag) VALUES (?, ?, ?, ?)', [null, title, fileUrl, teacherTag || null]);
+        const simId = result.lastID;
+        if (Array.isArray(courseIds)) {
+            for (const cid of courseIds) {
+                await db.run('INSERT OR IGNORE INTO simulation_courses (simulation_id, course_id) VALUES (?, ?)', [simId, cid]);
+            }
+        }
+        res.json({ success: true, id: simId });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create simulation' });
     }
 });
 
@@ -616,7 +635,34 @@ app.delete('/api/teacher/simulations/:id/enroll', authenticateToken, isTeacher, 
     }
 });
 
-// Lessons sorted by sort_order (for courses API)
+// Get all simulations for admin (includes course info)
+app.get('/api/admin/simulations', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const db = await getDb();
+        const sims = await db.all('SELECT * FROM simulations ORDER BY title ASC');
+        for (const s of sims) {
+            // Get linked courses
+            if (s.course_id) {
+                const mainCourse = await db.get('SELECT id, title FROM courses WHERE id = ?', [s.course_id]);
+                s.mainCourse = mainCourse;
+            } else {
+                s.mainCourse = null;
+            }
+            // Get extra courses
+            const extra = await db.all(`
+                SELECT c.id, c.title FROM courses c 
+                JOIN simulation_courses sc ON c.id = sc.course_id 
+                WHERE sc.simulation_id = ?`, [s.id]);
+            s.extraCourses = extra;
+            s.extraCourseIds = extra.map(e => e.id);
+        }
+        res.json(sims);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed' });
+    }
+});
+
+// Get all simulations (public, for teacher)
 app.get('/api/simulations/all', async (req, res) => {
     try {
         const db = await getDb();

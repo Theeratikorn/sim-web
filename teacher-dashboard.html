@@ -14,9 +14,11 @@
             padding: 20px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
         }
         .filter-bar input, .filter-bar select {
             flex: 1;
+            min-width: 200px;
             padding: 12px;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -42,6 +44,75 @@
             font-size: 0.8rem;
             margin-bottom: 10px;
         }
+        .teacher-tag {
+            display: inline-block;
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .enrolled-badge {
+            display: inline-block;
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .enrolled-section {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .enrolled-section h3 {
+            color: #2ecc71;
+            margin-top: 0;
+        }
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .tag-filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tag-filter-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .tag-filter-btn:hover, .tag-filter-btn.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
     </style>
 </head>
 <body>
@@ -56,6 +127,30 @@
         <h2 class="mb-2">คลังโปรแกรมจำลอง (Simulation Gallery)</h2>
         <p class="text-muted mb-4">ค้นหาและเลือกใช้โปรแกรมจำลองเพื่อประกอบการสอน</p>
 
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="total-sims">0</div>
+                <div class="stat-label">โปรแกรมทั้งหมด</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="enrolled-sims">0</div>
+                <div class="stat-label">ที่ลงทะเบียนไว้</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="unique-tags">0</div>
+                <div class="stat-label">ประเภทครู</div>
+            </div>
+        </div>
+
+        <!-- Enrolled Simulations -->
+        <div class="enrolled-section" id="enrolled-section" style="display:none;">
+            <h3>✅ โปรแกรมที่ลงทะเบียนไว้แล้ว</h3>
+            <div id="enrolled-list" class="grid grid-cols-3">
+                <!-- Enrolled sims injected by JS -->
+            </div>
+        </div>
+
         <!-- Filter Bar -->
         <div class="filter-bar">
             <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อโปรแกรมจำลอง...">
@@ -63,6 +158,15 @@
                 <option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>
                 <!-- Options injected by JS -->
             </select>
+        </div>
+
+        <!-- Tag Filter -->
+        <div style="margin-bottom: 20px;">
+            <label style="color: #aaa; font-size: 0.9rem; margin-bottom: 5px; display: block;">กรองตามประเภทครู:</label>
+            <div class="tag-filter-group" id="tag-filters">
+                <button class="tag-filter-btn active" data-tag="all">ทั้งหมด</button>
+                <!-- Tag buttons injected by JS -->
+            </div>
         </div>
 
         <!-- Gallery Grid -->
@@ -79,80 +183,233 @@
 
     <script src="js/app.js"></script>
     <script>
-        function initGallery() {
+        let allSimulations = [];
+        let enrolledSims = new Set();
+        let allTags = [];
+        let currentTag = 'all';
+
+        // Fetch all simulations
+        async function fetchAllSimulations() {
+            try {
+                const res = await fetch(`${API_URL}/simulations/all`);
+                if (res.ok) {
+                    allSimulations = await res.json();
+                    
+                    // Extract unique tags
+                    const tagsSet = new Set();
+                    allSimulations.forEach(sim => {
+                        if (sim.teacher_tag) {
+                            sim.teacher_tag.split(',').forEach(t => tagsSet.add(t.trim()));
+                        }
+                    });
+                    allTags = Array.from(tagsSet).sort();
+                    
+                    renderTagFilters();
+                    renderGallery();
+                    updateStats();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // Fetch enrolled simulations for this teacher
+        async function fetchEnrolledSimulations() {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const res = await fetch(`${API_URL}/teacher/simulations`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const enrolled = await res.json();
+                    enrolledSims = new Set(enrolled.map(s => s.id));
+                    renderEnrolledSection();
+                    renderGallery();
+                    updateStats();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // Enroll simulation
+        window.enrollSim = async function(simId) {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const res = await fetch(`${API_URL}/teacher/simulations/${simId}/enroll`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    enrolledSims.add(simId);
+                    renderEnrolledSection();
+                    renderGallery();
+                    updateStats();
+                    alert('ลงทะเบียนสำเร็จ!');
+                }
+            } catch(e) { alert('เกิดข้อผิดพลาด'); }
+        };
+
+        // Unenroll simulation
+        window.unenrollSim = async function(simId) {
+            if (!confirm('ยืนยันการยกเลิกลงทะเบียน?')) return;
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const res = await fetch(`${API_URL}/teacher/simulations/${simId}/enroll`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    enrolledSims.delete(simId);
+                    renderEnrolledSection();
+                    renderGallery();
+                    updateStats();
+                }
+            } catch(e) { alert('เกิดข้อผิดพลาด'); }
+        };
+
+        // Render enrolled section
+        function renderEnrolledSection() {
+            const section = document.getElementById('enrolled-section');
+            const list = document.getElementById('enrolled-list');
+            
+            const enrolledData = allSimulations.filter(s => enrolledSims.has(s.id));
+            
+            if (enrolledData.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            let html = '';
+            enrolledData.forEach(sim => {
+                const tags = sim.teacher_tag ? sim.teacher_tag.split(',').map(t => `<span class="teacher-tag">${t.trim()}</span>`).join('') : '';
+                html += `
+                <div class="card sim-card">
+                    <div>
+                        <span class="enrolled-badge">✅ ลงทะเบียนแล้ว</span>
+                        <h3 style="margin: 10px 0;">${sim.title}</h3>
+                        ${tags}
+                    </div>
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <a href="lesson.html?courseId=${sim.course_id || 0}&itemId=${sim.id}&type=sim" class="btn btn-primary btn-block">เปิดโปรแกรม</a>
+                        <button onclick="unenrollSim(${sim.id})" class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;">ยกเลิก</button>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        // Render tag filters
+        function renderTagFilters() {
+            const container = document.getElementById('tag-filters');
+            let html = '<button class="tag-filter-btn active" data-tag="all">ทั้งหมด</button>';
+            allTags.forEach(tag => {
+                html += `<button class="tag-filter-btn" data-tag="${tag}">${tag}</button>`;
+            });
+            container.innerHTML = html;
+
+            // Add click handlers
+            container.querySelectorAll('.tag-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelectorAll('.tag-filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTag = btn.dataset.tag;
+                    renderGallery();
+                });
+            });
+        }
+
+        // Render gallery
+        function renderGallery() {
             const searchInput = document.getElementById('search-input');
             const courseFilter = document.getElementById('course-filter');
             const simGallery = document.getElementById('sim-gallery');
 
-            // 1. Gather all simulations
-            let allSims = [];
-            courses.forEach(c => {
-                if (c.simulations && c.simulations.length > 0) {
-                    c.simulations.forEach(sim => {
-                        allSims.push({
-                            ...sim,
-                            courseId: c.id,
-                            courseTitle: c.title
-                        });
-                    });
-                }
+            // Build course filter options
+            const courseMap = new Map();
+            allSimulations.forEach(sim => {
+                if (sim.course_id) courseMap.set(sim.course_id, true);
+            });
+            
+            // Filter logic
+            const searchText = searchInput.value.toLowerCase();
+            const filterCourseId = courseFilter.value;
+
+            const filteredSims = allSimulations.filter(sim => {
+                const matchText = sim.title.toLowerCase().includes(searchText);
+                const matchCourse = filterCourseId === 'all' || sim.course_id?.toString() === filterCourseId;
+                const matchTag = currentTag === 'all' || 
+                    (sim.teacher_tag && sim.teacher_tag.split(',').map(t => t.trim()).includes(currentTag));
+                return matchText && matchCourse && matchTag;
             });
 
-            // 2. Populate Course Filter Dropdown
-            let optionsHtml = '<option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>';
-            courses.forEach(c => {
-                if(c.simulations && c.simulations.length > 0) {
-                    optionsHtml += `<option value="${c.id}">${c.title}</option>`;
-                }
-            });
-            courseFilter.innerHTML = optionsHtml;
-
-            // 3. Render Function
-            function renderGallery() {
-                const searchText = searchInput.value.toLowerCase();
-                const filterCourseId = courseFilter.value;
-
-                // Filter logic
-                const filteredSims = allSims.filter(sim => {
-                    const matchText = sim.title.toLowerCase().includes(searchText) || sim.courseTitle.toLowerCase().includes(searchText);
-                    const matchCourse = filterCourseId === 'all' || sim.courseId.toString() === filterCourseId;
-                    return matchText && matchCourse;
-                });
-
-                // Display logic
-                if (filteredSims.length === 0) {
-                    simGallery.innerHTML = '<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 40px;">ไม่พบโปรแกรมจำลองที่ค้นหา</p>';
-                    return;
-                }
-
-                let html = '';
-                filteredSims.forEach(sim => {
-                    html += `
-                        <div class="card sim-card">
-                            <div>
-                                <span class="course-badge">${sim.courseTitle}</span>
-                                <h3>${sim.title}</h3>
-                            </div>
-                            <div style="margin-top: 20px;">
-                                <a href="lesson.html?courseId=${sim.courseId}&itemId=${sim.id}&type=sim" class="btn btn-primary btn-block">เปิดโปรแกรมจำลอง</a>
-                            </div>
-                        </div>
-                    `;
-                });
-                simGallery.innerHTML = html;
+            if (filteredSims.length === 0) {
+                simGallery.innerHTML = '<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 40px;">ไม่พบโปรแกรมจำลองที่ค้นหา</p>';
+                return;
             }
 
-            // 4. Attach Event Listeners
-            searchInput.addEventListener('input', renderGallery);
-            courseFilter.addEventListener('change', renderGallery);
-
-            // 5. Initial Render
-            renderGallery();
+            let html = '';
+            filteredSims.forEach(sim => {
+                const isEnrolled = enrolledSims.has(sim.id);
+                const tags = sim.teacher_tag ? sim.teacher_tag.split(',').map(t => `<span class="teacher-tag">${t.trim()}</span>`).join('') : '';
+                const courseName = courses.find(c => c.id === sim.course_id)?.title || 'ไม่ระบุคอร์ส';
+                
+                html += `
+                <div class="card sim-card">
+                    <div>
+                        <span class="course-badge">${courseName}</span>
+                        ${tags}
+                        <h3>${sim.title}</h3>
+                        ${isEnrolled ? '<span class="enrolled-badge">✅ ลงทะเบียนแล้ว</span>' : ''}
+                    </div>
+                    <div style="margin-top: 20px;">
+                        ${isEnrolled ? 
+                            `<a href="lesson.html?courseId=${sim.course_id || 0}&itemId=${sim.id}&type=sim" class="btn btn-primary btn-block">เปิดโปรแกรม</a>` :
+                            `<button onclick="enrollSim(${sim.id})" class="btn btn-outline btn-block" style="border-color: var(--color-primary); color: var(--color-primary);">➕ ลงทะเบียนใช้งาน</button>`
+                        }
+                    </div>
+                </div>`;
+            });
+            simGallery.innerHTML = html;
         }
 
-        document.addEventListener('coursesLoaded', initGallery);
-        document.addEventListener('DOMContentLoaded', () => {
-            if (courses.length > 0) initGallery();
+        // Update stats
+        function updateStats() {
+            document.getElementById('total-sims').textContent = allSimulations.length;
+            document.getElementById('enrolled-sims').textContent = enrolledSims.size;
+            document.getElementById('unique-tags').textContent = allTags.length;
+        }
+
+        // Populate course filter dropdown
+        function populateCourseFilter() {
+            const select = document.getElementById('course-filter');
+            let optionsHtml = '<option value="all">ทุกคอร์ส (หมวดหมู่ทั้งหมด)</option>';
+            
+            courses.forEach(c => {
+                optionsHtml += `<option value="${c.id}">${c.title}</option>`;
+            });
+            
+            select.innerHTML = optionsHtml;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for courses to load
+            const checkCourses = setInterval(() => {
+                if (courses.length > 0) {
+                    clearInterval(checkCourses);
+                    populateCourseFilter();
+                    fetchAllSimulations();
+                    fetchEnrolledSimulations();
+                }
+            }, 100);
+            
+            // Event listeners
+            document.getElementById('search-input').addEventListener('input', renderGallery);
+            document.getElementById('course-filter').addEventListener('change', renderGallery);
+        });
+
+        document.addEventListener('coursesLoaded', async () => {
+            populateCourseFilter();
+            await fetchAllSimulations();
+            await fetchEnrolledSimulations();
         });
     </script>
 </body>

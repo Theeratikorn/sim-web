@@ -5,6 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการระบบ Admin - Grow Up Study</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .package-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--color-primary);
+        }
+        .package-card.inactive {
+            opacity: 0.6;
+            border-left-color: #666;
+        }
+        .package-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+        .package-original {
+            font-size: 0.9rem;
+            color: #999;
+            text-decoration: line-through;
+        }
+        .tag-badge {
+            display: inline-block;
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--color-primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        .course-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .course-select-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .course-select-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .course-select-item.selected {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid var(--color-primary);
+        }
+        .course-select-item input {
+            cursor: pointer;
+        }
+        .standalone-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .cover-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .carousel-track {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 10px 0;
+        }
+        .carousel-track::-webkit-scrollbar {
+            height: 8px;
+        }
+        .carousel-track::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        .carousel-track::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 4px;
+        }
+        .carousel-card {
+            min-width: 280px;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--color-primary);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.2rem;
+        }
+        .carousel-nav.prev { left: 0; }
+        .carousel-nav.next { right: 0; }
+    </style>
 </head>
 <body>
     <header>
@@ -14,7 +137,7 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 40px 0; flex: 1; max-width: 800px;">
+    <main class="container" style="padding: 40px 0; flex: 1; max-width: 900px;">
         <h2 class="mb-4">จัดการเนื้อหา (Admin Panel)</h2>
 
         <!-- Change Password -->
@@ -80,20 +203,40 @@
         <!-- Add Simulation -->
         <div class="card mb-4" style="border-top: 4px solid var(--color-secondary);">
             <h3>➕ เพิ่มโปรแกรมจำลอง (Simulation)</h3>
-
+            
             <div style="display:flex; gap:10px; margin: 15px 0 10px;">
                 <button type="button" id="btn-mode-upload" onclick="setSimMode('upload')" class="btn btn-primary" style="flex:1; padding:8px; font-size:0.9rem;">📂 อัปโหลดไฟล์ (.html / .zip)</button>
                 <button type="button" id="btn-mode-url" onclick="setSimMode('url')" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.9rem;">🔗 ใส่ URL ตรงๆ</button>
             </div>
 
             <form id="add-sim-form" class="mt-2">
-                <div class="form-group">
-                    <label>เลือกคอร์ส</label>
-                    <select id="s-courseId" class="form-control" required></select>
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+                    <label style="min-width:120px;">โหมดสร้าง:</label>
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="radio" name="sim-mode" value="course" checked onchange="toggleStandalone(false)">
+                        <span>ผูกกับคอร์ส</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="radio" name="sim-mode" value="standalone" onchange="toggleStandalone(true)">
+                        <span>Standalone (ไม่ผูกคอร์ส)</span>
+                    </label>
                 </div>
+
+                <div id="sim-course-select">
+                    <div class="form-group">
+                        <label>เลือกคอร์สหลัก (เลือกได้หลายคอร์ส)</label>
+                        <div id="sim-course-checkboxes" class="course-select-grid"></div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>ชื่อโปรแกรมจำลอง</label>
                     <input type="text" id="s-title" class="form-control" placeholder="เช่น จำลองแรงเสียดทาน" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Tag ครู (แยกประเภท)</label>
+                    <input type="text" id="s-teacher-tag" class="form-control" placeholder="เช่น ครูฟิสิกส์, ครูเคมี">
                 </div>
 
                 <!-- Upload Mode -->
@@ -116,6 +259,53 @@
 
                 <button type="submit" class="btn btn-primary" style="background:var(--color-secondary); width:100%;">➕ เพิ่มโปรแกรมจำลอง</button>
             </form>
+        </div>
+
+        <!-- Package Management -->
+        <div class="card mb-4" style="border-top: 4px solid #e74c3c;">
+            <h3>📦 จัดการแพ็คเรียน (Packages)</h3>
+            
+            <!-- Create Package Form -->
+            <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin:15px 0;">
+                <h4 style="margin:0 0 15px;">➕ สร้างแพ็คใหม่</h4>
+                <form id="add-package-form">
+                    <div class="form-group">
+                        <label>ชื่อแพ็ค</label>
+                        <input type="text" id="p-name" class="form-control" placeholder="เช่น แพ็คครบเซ็ต ฟิสิกส์" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รายละเอียด</label>
+                        <textarea id="p-desc" class="form-control" rows="2" placeholder="อธิบายสั้นๆ"></textarea>
+                    </div>
+                    <div style="display:flex; gap:15px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>ราคา (บาท)</label>
+                            <input type="number" id="p-price" class="form-control" placeholder="เช่น 990">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>ราคาเดิม (ถ้าลดราคา)</label>
+                            <input type="number" id="p-original" class="form-control" placeholder="เช่น 1500">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>เลือกคอร์สในแพ็ค</label>
+                        <div id="pkg-course-checkboxes" class="course-select-grid"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>เลือก Simulation ในแพ็ค</label>
+                        <div id="pkg-sim-checkboxes" class="course-select-grid"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="background:#e74c3c; border:none; width:100%;">📦 สร้างแพ็ค</button>
+                </form>
+            </div>
+            
+            <!-- Package List -->
+            <div id="package-list" class="mt-3">
+                <p class="text-muted">กำลังโหลด...</p>
+            </div>
         </div>
 
         <!-- Pending Enrollments -->
@@ -145,8 +335,17 @@
         </div>
     </main>
 
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Grow Up Study. All rights reserved.</p>
+        </div>
+    </footer>
+
     <script src="js/app.js"></script>
     <script>
+        let allSimulations = [];
+        let allPackages = [];
+
         // --- Sim Mode Toggle ---
         let currentSimMode = 'upload';
         window.setSimMode = function(mode) {
@@ -157,18 +356,463 @@
             document.getElementById('btn-mode-url').className = mode === 'url' ? 'btn btn-primary' : 'btn btn-outline';
         };
 
+        window.toggleStandalone = function(isStandalone) {
+            const courseSelect = document.getElementById('sim-course-select');
+            if (isStandalone) {
+                courseSelect.style.display = '';
+                courseSelect.querySelector('label').textContent = 'เลือกคอร์สที่จะแสดง (เลือกได้หลายคอร์ส)';
+            } else {
+                courseSelect.style.display = '';
+                courseSelect.querySelector('label').textContent = 'เลือกคอร์สหลัก (เลือกได้หลายคอร์ส)';
+            }
+        };
+
+        // --- Course Checkbox Helpers ---
+        function renderCourseCheckboxes(containerId, items, selectedIds, onChange) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = items.map(c => `
+                <label class="course-select-item ${selectedIds.includes(c.id) ? 'selected' : ''}">
+                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked' : ''} 
+                        onchange="${onChange}(this)">
+                    <span>${c.title}</span>
+                </label>
+            `).join('');
+        }
+
+        function updateCheckboxStyle(checkbox) {
+            const label = checkbox.closest('.course-select-item');
+            if (checkbox.checked) label.classList.add('selected');
+            else label.classList.remove('selected');
+        }
+
+        // --- Fetch Data ---
+        async function fetchAllSimulations() {
+            try {
+                const res = await fetch(`${API_URL}/admin/simulations`, { headers: getAuthHeaders() });
+                if (res.ok) allSimulations = await res.json();
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchPackages() {
+            try {
+                const res = await fetch(`${API_URL}/admin/packages`, { headers: getAuthHeaders() });
+                if (res.ok) allPackages = await res.json();
+                renderPackages();
+            } catch(e) { console.error(e); }
+        }
+
+        // --- Package Management ---
+        function renderPackages() {
+            const container = document.getElementById('package-list');
+            if (allPackages.length === 0) {
+                container.innerHTML = '<p class="text-muted">ยังไม่มีแพ็คเรียน</p>';
+                return;
+            }
+            
+            let html = '';
+            allPackages.forEach(pkg => {
+                const discount = pkg.original_price > pkg.price ? Math.round((1 - pkg.price/pkg.original_price)*100) : 0;
+                html += `
+                <div class="package-card ${pkg.is_active ? '' : 'inactive'}">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <h4 style="margin:0;">${pkg.name}</h4>
+                            <p style="font-size:0.9rem; color:#aaa; margin:5px 0;">${pkg.description || ''}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="package-price">฿${pkg.price.toLocaleString()}</span>
+                            ${pkg.original_price > pkg.price ? `<br><span class="package-original">฿${pkg.original_price.toLocaleString()}</span>` : ''}
+                            ${discount > 0 ? `<br><span style="color:#e74c3c; font-size:0.8rem;">ลด ${discount}%</span>` : ''}
+                        </div>
+                    </div>
+                    ${pkg.cover_url ? `<img src="${pkg.cover_url}" class="cover-preview" alt="cover">` : ''}
+                    <div style="margin-top:10px;">
+                        <p style="font-size:0.85rem; color:#aaa; margin:5px 0;">📚 คอร์ส: ${pkg.courses?.length || 0} คอร์ส</p>
+                        <p style="font-size:0.85rem; color:#aaa; margin:5px 0;">🖥️ Simulation: ${pkg.simulations?.length || 0} อัน</p>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button onclick="editPackage(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
+                        <button onclick="changePackageCover(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem;">🖼️ เปลี่ยนหน้าปก</button>
+                        <button onclick="deletePackage(${pkg.id})" class="btn btn-outline" style="flex:1; padding:8px; font-size:0.85rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.editPackage = function(id) {
+            const pkg = allPackages.find(p => p.id === id);
+            const name = prompt('ชื่อแพ็ค:', pkg.name);
+            if (name === null) return;
+            const description = prompt('รายละเอียด:', pkg.description || '');
+            if (description === null) return;
+            const price = prompt('ราคา:', pkg.price);
+            if (price === null) return;
+            const originalPrice = prompt('ราคาเดิม:', pkg.original_price);
+            if (originalPrice === null) return;
+            
+            const isActive = confirm('แพ็คนี้ยังใช้งานอยู่หรือไม่? (OK = ใช้งาน, Cancel = ปิด)') ? true : false;
+            
+            fetch(`${API_URL}/packages/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ 
+                    name, description, 
+                    price: parseFloat(price) || 0,
+                    originalPrice: parseFloat(originalPrice) || 0,
+                    isActive,
+                    courseIds: pkg.courses?.map(c => c.id) || [],
+                    simulationIds: pkg.simulations?.map(s => s.id) || []
+                })
+            }).then(() => fetchPackages());
+        };
+
+        window.changePackageCover = function(id) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('cover', file);
+                const token = localStorage.getItem('jwt_token');
+                const res = await fetch(`${API_URL}/packages/${id}/cover`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (res.ok) fetchPackages();
+                else alert('อัปโหลดหน้าปกล้มเหลว');
+            };
+            input.click();
+        };
+
+        window.deletePackage = async function(id) {
+            if (!confirm('ยืนยันการลบแพ็คนี้?')) return;
+            await fetch(`${API_URL}/packages/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            fetchPackages();
+        };
+
+        // --- Content Management ---
+        function renderContentManage() {
+            const container = document.getElementById('content-manage-list');
+            if (courses.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์สเรียน</p>'; return; }
+            let html = '';
+            courses.forEach(c => {
+                html += `<div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #16a085;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h4 style="margin:0; color:#1abc9c;">📚 ${c.title}</h4>
+                            <button onclick="changeCourseCover(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.7rem;">🖼️ หน้าปก</button>
+                        </div>
+                        <div>
+                            <button onclick="editCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
+                            <button onclick="deleteCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
+                        </div>
+                    </div>
+                    ${c.cover_url ? `<img src="${c.cover_url}" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">` : ''}
+                    <p style="font-size:0.9rem; margin-bottom:10px;">${c.description}</p>
+                    <div style="padding-left:20px; border-left:2px dashed rgba(255,255,255,0.1);">
+                        <p style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">วิดีโอ (${c.lessons ? c.lessons.length : 0})</p>`;
+                if(c.lessons) c.lessons.forEach(l => {
+                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
+                        <span>▶️ ${l.title}</span>
+                        <div>
+                            <button onclick="editLesson(${l.id}, ${c.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
+                            <button onclick="deleteLesson(${l.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
+                        </div>
+                    </div>`;
+                });
+                html += `<p style="font-size:0.85rem; color:#aaa; margin-top:10px; margin-bottom:5px;">โปรแกรมจำลอง (${c.simulations ? c.simulations.length : 0})</p>`;
+                if(c.simulations) c.simulations.forEach(s => {
+                    const tags = s.teacher_tag ? s.teacher_tag.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
+                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
+                        <span>🖥️ ${s.title} ${tags}</span>
+                        <div>
+                            <button onclick="editSim(${s.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
+                            <button onclick="deleteSim(${s.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.changeCourseCover = async function(id) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('cover', file);
+                const token = localStorage.getItem('jwt_token');
+                const res = await fetch(`${API_URL}/courses/${id}/cover`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (res.ok) { alert('อัปโหลดหน้าปกสำเร็จ!'); fetchCourses(); }
+                else alert('อัปโหลดหน้าปกล้มเหลว');
+            };
+            input.click();
+        };
+
+        window.editCourse = async function(id) {
+            const course = courses.find(c => c.id === id);
+            openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
+        };
+
+        window.deleteCourse = async function(id) {
+            if(!confirm('คำเตือน: การลบคอร์สจะลบเนื้อหาและนักเรียนที่ลงเรียนทั้งหมด! ยืนยันหรือไม่?')) return;
+            await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            fetchCourses();
+        };
+
+        window.editLesson = async function(id, cId) {
+            const course = courses.find(c => c.id === cId);
+            const lesson = course.lessons.find(l => l.id === id);
+            openModal('lesson', { id: lesson.id, title: lesson.title, video_id: lesson.video_id, document_url: lesson.document_url });
+        };
+
+        window.deleteLesson = async function(id) {
+            if(!confirm('ลบวิดีโอนี้?')) return;
+            await fetch(`${API_URL}/lessons/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            fetchCourses();
+        };
+
+        window.editSim = async function(id) {
+            const sim = allSimulations.find(s => s.id === id);
+            if (!sim) {
+                // Find from courses
+                for (const c of courses) {
+                    const found = c.simulations?.find(s => s.id === id);
+                    if (found) {
+                        openModal('simulation', { id: found.id, title: found.title, file_url: found.file_url, teacher_tag: found.teacher_tag });
+                        return;
+                    }
+                }
+                return;
+            }
+            openModal('simulation', { id: sim.id, title: sim.title, file_url: sim.file_url, teacher_tag: sim.teacher_tag });
+        };
+
+        window.deleteSim = async function(id) {
+            if(!confirm('ลบโปรแกรมจำลองนี้?')) return;
+            await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+            fetchCourses();
+            fetchAllSimulations();
+        };
+
+        function initAdmin() {
+            const vSelect = document.getElementById('v-courseId');
+            const sSelect = document.getElementById('s-courseId');
+            let options = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+            vSelect.innerHTML = options;
+            sSelect.innerHTML = options;
+
+            // Render course checkboxes for simulation
+            renderCourseCheckboxes('sim-course-checkboxes', courses, [], 'toggleSimCourse');
+            
+            // Render course checkboxes for package
+            renderCourseCheckboxes('pkg-course-checkboxes', courses, [], 'togglePkgCourse');
+            
+            // Render simulation checkboxes for package
+            if (allSimulations.length > 0) {
+                renderCourseCheckboxes('pkg-sim-checkboxes', allSimulations, [], 'togglePkgSim');
+            }
+
+            renderContentManage();
+        }
+
+        // Checkbox toggles
+        const selectedSimCourses = new Set();
+        const selectedPkgCourses = new Set();
+        const selectedPkgSims = new Set();
+
+        window.toggleSimCourse = function(cb) {
+            const id = parseInt(cb.value);
+            if (cb.checked) selectedSimCourses.add(id);
+            else selectedSimCourses.delete(id);
+            updateCheckboxStyle(cb);
+        };
+
+        window.togglePkgCourse = function(cb) {
+            const id = parseInt(cb.value);
+            if (cb.checked) selectedPkgCourses.add(id);
+            else selectedPkgCourses.delete(id);
+            updateCheckboxStyle(cb);
+        };
+
+        window.togglePkgSim = function(cb) {
+            const id = parseInt(cb.value);
+            if (cb.checked) selectedPkgSims.add(id);
+            else selectedPkgSims.delete(id);
+            updateCheckboxStyle(cb);
+        };
+
+        document.addEventListener('coursesLoaded', async () => {
+            await fetchAllSimulations();
+            initAdmin();
+            fetchPackages();
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (courses.length > 0) {
+                await fetchAllSimulations();
+                initAdmin();
+                fetchPackages();
+            }
+            fetchPendingEnrollments();
+            fetchActiveEnrollments();
+            fetchUsers();
+
+            // Course form
+            document.getElementById('add-course-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('c-title').value;
+                const description = document.getElementById('c-desc').value;
+                const durationDays = document.getElementById('c-duration').value;
+                const res = await fetch(`${API_URL}/courses`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, description, durationDays }) });
+                if (res.ok) { alert('สร้างคอร์สสำเร็จ!'); e.target.reset(); fetchCourses(); }
+            });
+
+            // Password change
+            document.getElementById('change-pwd-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const oldPassword = document.getElementById('pwd-old').value;
+                const newPassword = document.getElementById('pwd-new').value;
+                const res = await fetch(`${API_URL}/admin/password`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ oldPassword, newPassword }) });
+                const data = await res.json();
+                if (res.ok) { alert('เปลี่ยนรหัสผ่านสำเร็จ!'); e.target.reset(); }
+                else alert(data.error || 'เกิดข้อผิดพลาด');
+            });
+
+            // Video form
+            document.getElementById('add-video-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cId = parseInt(document.getElementById('v-courseId').value);
+                const title = document.getElementById('v-title').value;
+                let videoId = document.getElementById('v-videoId').value;
+                const documentUrl = document.getElementById('v-documentUrl').value;
+                const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                if (match && match[2].length === 11) videoId = match[2];
+                const res = await fetch(`${API_URL}/courses/${cId}/lessons`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, videoId, documentUrl }) });
+                if (res.ok) { alert('เพิ่มวิดีโอสำเร็จ!'); e.target.reset(); fetchCourses(); }
+            });
+
+            // Simulation form
+            document.getElementById('add-sim-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('s-title').value;
+                const teacherTag = document.getElementById('s-teacher-tag').value;
+                const statusEl = document.getElementById('s-upload-status');
+                const isStandalone = document.querySelector('input[name="sim-mode"]:checked').value === 'standalone';
+                const courseIds = Array.from(selectedSimCourses);
+
+                let fileUrl = '';
+
+                if (currentSimMode === 'upload') {
+                    const fileInput = document.getElementById('s-file');
+                    if (!fileInput.files[0]) { alert('กรุณาเลือกไฟล์ก่อนครับ'); return; }
+
+                    statusEl.style.display = '';
+                    statusEl.style.background = 'rgba(52,152,219,0.2)';
+                    statusEl.textContent = '⏳ กำลังอัปโหลดไฟล์...';
+
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    const token = localStorage.getItem('jwt_token');
+                    const uploadRes = await fetch(`${API_URL}/simulations/upload`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+
+                    if (!uploadRes.ok) {
+                        statusEl.style.background = 'rgba(231,76,60,0.2)';
+                        statusEl.textContent = `❌ อัปโหลดล้มเหลว: ${uploadData.error}`;
+                        return;
+                    }
+
+                    fileUrl = uploadData.url;
+                    statusEl.style.background = 'rgba(46,204,113,0.2)';
+                    statusEl.textContent = `✅ อัปโหลดสำเร็จ: ${fileUrl}`;
+                } else {
+                    fileUrl = document.getElementById('s-fileUrl').value;
+                    if (!fileUrl) { alert('กรุณากรอก URL ของไฟล์ครับ'); return; }
+                }
+
+                let res;
+                if (isStandalone) {
+                    // Create standalone simulation
+                    res = await fetch(`${API_URL}/simulations`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ title, fileUrl, teacherTag, courseIds })
+                    });
+                } else {
+                    // Create with main course
+                    const mainCourseId = courseIds.length > 0 ? courseIds[0] : null;
+                    if (!mainCourseId) { alert('กรุณาเลือกคอร์สอย่างน้อย 1 คอร์ส'); return; }
+                    const extraCourseIds = courseIds.slice(1);
+                    res = await fetch(`${API_URL}/courses/${mainCourseId}/simulations`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ title, fileUrl, teacherTag, extraCourseIds })
+                    });
+                }
+
+                if (res.ok) {
+                    alert('เพิ่มโปรแกรมจำลองสำเร็จ!');
+                    e.target.reset();
+                    if (statusEl) statusEl.style.display = 'none';
+                    selectedSimCourses.clear();
+                    fetchCourses();
+                    fetchAllSimulations();
+                    renderCourseCheckboxes('sim-course-checkboxes', courses, [], 'toggleSimCourse');
+                }
+            });
+
+            // Package form
+            document.getElementById('add-package-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('p-name').value;
+                const description = document.getElementById('p-desc').value;
+                const price = parseFloat(document.getElementById('p-price').value) || 0;
+                const originalPrice = parseFloat(document.getElementById('p-original').value) || 0;
+                const courseIds = Array.from(selectedPkgCourses);
+                const simulationIds = Array.from(selectedPkgSims);
+
+                const res = await fetch(`${API_URL}/packages`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ name, description, price, originalPrice, courseIds, simulationIds })
+                });
+
+                if (res.ok) {
+                    alert('สร้างแพ็คสำเร็จ!');
+                    e.target.reset();
+                    selectedPkgCourses.clear();
+                    selectedPkgSims.clear();
+                    fetchPackages();
+                    renderCourseCheckboxes('pkg-course-checkboxes', courses, [], 'togglePkgCourse');
+                    renderCourseCheckboxes('pkg-sim-checkboxes', allSimulations, [], 'togglePkgSim');
+                }
+            });
+        });
+
         async function fetchPendingEnrollments() {
             try {
                 const res = await fetch(`${API_URL}/admin/enrollments`, { headers: getAuthHeaders() });
-                if (res.ok) {
-                    renderPending(await res.json());
-                } else {
-                    const err = await res.json();
-                    document.getElementById('pending-list').innerHTML = `<p style="color:red;">Error: ${err.error}</p>`;
-                }
-            } catch(e) {
-                document.getElementById('pending-list').innerHTML = `<p style="color:red;">ไม่สามารถเชื่อมต่อ API ได้: ${e.message}</p>`;
-            }
+                if (res.ok) renderPending(await res.json());
+            } catch(e) {}
         }
 
         function renderPending(list) {
@@ -240,188 +884,6 @@
             await fetch(`${API_URL}/admin/users/${id}/role`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ role }) });
             alert('อัปเดตสิทธิ์สำเร็จ');
         };
-
-        function renderContentManage() {
-            const container = document.getElementById('content-manage-list');
-            if (courses.length === 0) { container.innerHTML = '<p class="text-muted">ยังไม่มีคอร์สเรียน</p>'; return; }
-            let html = '';
-            courses.forEach(c => {
-                html += `<div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #16a085;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:#1abc9c;">📚 ${c.title}</h4>
-                        <div>
-                            <button onclick="editCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#f39c12; color:#f39c12;">✏️ แก้ไข</button>
-                            <button onclick="deleteCourse(${c.id})" class="btn btn-outline" style="padding:3px 8px; font-size:0.8rem; border-color:#e74c3c; color:#e74c3c;">🗑️ ลบ</button>
-                        </div>
-                    </div>
-                    <p style="font-size:0.9rem; margin-bottom:10px;">${c.description}</p>
-                    <div style="padding-left:20px; border-left:2px dashed rgba(255,255,255,0.1);">
-                        <p style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">วิดีโอ (${c.lessons ? c.lessons.length : 0})</p>`;
-                if(c.lessons) c.lessons.forEach(l => {
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
-                        <span>▶️ ${l.title}</span>
-                        <div>
-                            <button onclick="editLesson(${l.id}, ${c.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
-                            <button onclick="deleteLesson(${l.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
-                        </div>
-                    </div>`;
-                });
-                html += `<p style="font-size:0.85rem; color:#aaa; margin-top:10px; margin-bottom:5px;">โปรแกรมจำลอง (${c.simulations ? c.simulations.length : 0})</p>`;
-                if(c.simulations) c.simulations.forEach(s => {
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:0.9rem;">
-                        <span>🖥️ ${s.title}</span>
-                        <div>
-                            <button onclick="editSim(${s.id}, ${c.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#f39c12; color:#f39c12;">แก้ไข</button>
-                            <button onclick="deleteSim(${s.id})" class="btn btn-outline" style="padding:2px 5px; font-size:0.7rem; border-color:#e74c3c; color:#e74c3c;">ลบ</button>
-                        </div>
-                    </div>`;
-                });
-                html += `</div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        window.editCourse = async function(id) {
-            const course = courses.find(c => c.id === id);
-            openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
-        };
-
-        window.deleteCourse = async function(id) {
-            if(!confirm('คำเตือน: การลบคอร์สจะลบเนื้อหาและนักเรียนที่ลงเรียนทั้งหมด! ยืนยันหรือไม่?')) return;
-            await fetch(`${API_URL}/courses/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
-
-        window.editLesson = async function(id, cId) {
-            const course = courses.find(c => c.id === cId);
-            const lesson = course.lessons.find(l => l.id === id);
-            const title = prompt('ชื่อวิดีโอ:', lesson.title); if(title === null) return;
-            let videoId = prompt('รหัส YouTube หรือลิงก์เต็ม:', lesson.video_id); if(videoId === null) return;
-            const documentUrl = prompt('ลิงก์ชีทเรียน (เว้นว่างได้):', lesson.document_url || ''); if(documentUrl === null) return;
-            const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-            if (match && match[2].length === 11) videoId = match[2];
-            await fetch(`${API_URL}/lessons/${id}`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ title, videoId, documentUrl }) });
-            fetchCourses();
-        };
-
-        window.deleteLesson = async function(id) {
-            if(!confirm('ลบวิดีโอนี้?')) return;
-            await fetch(`${API_URL}/lessons/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
-
-        window.editSim = async function(id, cId) {
-            const course = courses.find(c => c.id === cId);
-            const sim = course.simulations.find(s => s.id === id);
-            const title = prompt('ชื่อโปรแกรมจำลอง:', sim.title); if(title === null) return;
-            const fileUrl = prompt('URL ไฟล์:', sim.file_url); if(fileUrl === null) return;
-            await fetch(`${API_URL}/simulations/${id}`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ title, fileUrl }) });
-            fetchCourses();
-        };
-
-        window.deleteSim = async function(id) {
-            if(!confirm('ลบโปรแกรมจำลองนี้?')) return;
-            await fetch(`${API_URL}/simulations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-            fetchCourses();
-        };
-
-        function initAdmin() {
-            const vSelect = document.getElementById('v-courseId');
-            const sSelect = document.getElementById('s-courseId');
-            let options = courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
-            vSelect.innerHTML = options;
-            sSelect.innerHTML = options;
-            renderContentManage();
-        }
-
-        document.addEventListener('coursesLoaded', initAdmin);
-        document.addEventListener('DOMContentLoaded', () => {
-            if (courses.length > 0) initAdmin();
-            fetchPendingEnrollments();
-            fetchActiveEnrollments();
-            fetchUsers();
-
-            document.getElementById('add-course-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = document.getElementById('c-title').value;
-                const description = document.getElementById('c-desc').value;
-                const durationDays = document.getElementById('c-duration').value;
-                const res = await fetch(`${API_URL}/courses`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, description, durationDays }) });
-                if (res.ok) { alert('สร้างคอร์สสำเร็จ!'); e.target.reset(); fetchCourses(); }
-            });
-
-            document.getElementById('change-pwd-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const oldPassword = document.getElementById('pwd-old').value;
-                const newPassword = document.getElementById('pwd-new').value;
-                const res = await fetch(`${API_URL}/admin/password`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ oldPassword, newPassword }) });
-                const data = await res.json();
-                if (res.ok) { alert('เปลี่ยนรหัสผ่านสำเร็จ!'); e.target.reset(); }
-                else alert(data.error || 'เกิดข้อผิดพลาด');
-            });
-
-            document.getElementById('add-video-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const cId = parseInt(document.getElementById('v-courseId').value);
-                const title = document.getElementById('v-title').value;
-                let videoId = document.getElementById('v-videoId').value;
-                const documentUrl = document.getElementById('v-documentUrl').value;
-                const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-                if (match && match[2].length === 11) videoId = match[2];
-                const res = await fetch(`${API_URL}/courses/${cId}/lessons`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, videoId, documentUrl }) });
-                if (res.ok) { alert('เพิ่มวิดีโอสำเร็จ!'); e.target.reset(); fetchCourses(); }
-            });
-
-            document.getElementById('add-sim-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const cId = parseInt(document.getElementById('s-courseId').value);
-                const title = document.getElementById('s-title').value;
-                const statusEl = document.getElementById('s-upload-status');
-
-                let fileUrl = '';
-
-                if (currentSimMode === 'upload') {
-                    const fileInput = document.getElementById('s-file');
-                    if (!fileInput.files[0]) { alert('กรุณาเลือกไฟล์ก่อนครับ'); return; }
-
-                    statusEl.style.display = '';
-                    statusEl.style.background = 'rgba(52,152,219,0.2)';
-                    statusEl.textContent = '⏳ กำลังอัปโหลดไฟล์...';
-
-                    const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
-
-                    const token = localStorage.getItem('jwt_token');
-                    const uploadRes = await fetch(`${API_URL}/simulations/upload`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: formData
-                    });
-                    const uploadData = await uploadRes.json();
-
-                    if (!uploadRes.ok) {
-                        statusEl.style.background = 'rgba(231,76,60,0.2)';
-                        statusEl.textContent = `❌ อัปโหลดล้มเหลว: ${uploadData.error}`;
-                        return;
-                    }
-
-                    fileUrl = uploadData.url;
-                    statusEl.style.background = 'rgba(46,204,113,0.2)';
-                    statusEl.textContent = `✅ อัปโหลดสำเร็จ: ${fileUrl}`;
-                } else {
-                    fileUrl = document.getElementById('s-fileUrl').value;
-                    if (!fileUrl) { alert('กรุณากรอก URL ของไฟล์ครับ'); return; }
-                }
-
-                const res = await fetch(`${API_URL}/courses/${cId}/simulations`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ title, fileUrl }) });
-                if (res.ok) {
-                    alert('เพิ่มโปรแกรมจำลองสำเร็จ!');
-                    e.target.reset();
-                    if (statusEl) statusEl.style.display = 'none';
-                    fetchCourses();
-                }
-            });
-        });
     </script>
 <script>
 // Modal handling utilities
@@ -472,6 +934,10 @@ function openModal(type, data) {
             <div class="form-group" style="margin-bottom:10px;">
                 <label>URL ไฟล์</label>
                 <input type="text" id="modal-sim-url" class="form-control" value="${data.file_url}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>Tag ครู</label>
+                <input type="text" id="modal-sim-tag" class="form-control" value="${data.teacher_tag || ''}" placeholder="เช่น ครูฟิสิกส์">
             </div>`;
     }
     modal.style.display = 'flex';
@@ -496,7 +962,7 @@ document.getElementById('modal-form').addEventListener('submit', async (e) => {
         const title = document.getElementById('modal-lesson-title').value.trim();
         let videoId = document.getElementById('modal-lesson-videoId').value.trim();
         const documentUrl = document.getElementById('modal-lesson-docUrl').value.trim();
-        const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\//|embed\/|watch\?v=|\&v=)([^#\&?]*).*/);
+        const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&?]*).*/);
         if (match && match[2].length === 11) videoId = match[2];
         await fetch(`${API_URL}/lessons/${id}`, {
             method: 'PUT',
@@ -506,31 +972,32 @@ document.getElementById('modal-form').addEventListener('submit', async (e) => {
     } else if (type === 'simulation') {
         const title = document.getElementById('modal-sim-title').value.trim();
         const fileUrl = document.getElementById('modal-sim-url').value.trim();
+        const teacherTag = document.getElementById('modal-sim-tag').value.trim();
         await fetch(`${API_URL}/simulations/${id}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ title, fileUrl })
+            body: JSON.stringify({ title, fileUrl, teacherTag })
         });
     }
     closeModal();
     fetchCourses();
+    fetchAllSimulations();
 });
-// Override edit functions to use modal
-window.editCourse = async function(id) {
-    const course = courses.find(c => c.id === id);
-    openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
-};
-window.editLesson = async function(id, cId) {
-    const course = courses.find(c => c.id === cId);
-    const lesson = course.lessons.find(l => l.id === id);
-    openModal('lesson', { id: lesson.id, title: lesson.title, video_id: lesson.video_id, document_url: lesson.document_url });
-};
-window.editSim = async function(id, cId) {
-    const course = courses.find(c => c.id === cId);
-    const sim = course.simulations.find(s => s.id === id);
-    openModal('simulation', { id: sim.id, title: sim.title, file_url: sim.file_url });
-};
 </script>
+
+<!-- Edit Modal -->
+<div id="edit-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card); border-radius:12px; padding:25px; max-width:500px; width:90%; border:1px solid rgba(255,255,255,0.2);">
+        <h3 id="modal-title" style="margin:0 0 15px;">แก้ไข</h3>
+        <form id="modal-form">
+            <div id="modal-fields"></div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">💾 บันทึก</button>
+                <button type="button" onclick="closeModal()" class="btn btn-outline" style="flex:1;">ยกเลิก</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>

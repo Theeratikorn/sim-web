@@ -53,7 +53,7 @@ async function initDb() {
       title TEXT,
       file_url TEXT,
       teacher_tag TEXT,
-      FOREIGN KEY(course_id) REFERENCES courses(id)
+      FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS simulation_courses (

@@ -44,13 +44,24 @@ const multerStorage = multer.diskStorage({
 });
 const upload = multer({
     storage: multerStorage,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+    limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-        const allowed = ['.html', '.zip'];
+        const allowed = ['.html', '.zip', '.jpg', '.jpeg', '.png', '.webp', '.gif'];
         const ext = path.extname(file.originalname).toLowerCase();
         if (allowed.includes(ext)) cb(null, true);
-        else cb(new Error('Only .html and .zip files are allowed'));
+        else cb(new Error('File type not allowed'));
     }
+});
+const uploadImage = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            const d = path.join(UPLOADS_DIR, 'covers');
+            if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+            cb(null, d);
+        },
+        filename: (req, file, cb) => cb(null, `${randomUUID()}${path.extname(file.originalname).toLowerCase()}`)
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 // Serve HTML files
@@ -102,6 +113,12 @@ const isAdmin = (req, res, next) => {
     }
     next();
 };
+const isTeacher = (req, res, next) => {
+    if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Teacher access required' });
+    }
+    next();
+};
 
 // --- AUTH API ---
 
@@ -141,8 +158,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/courses', optionalToken, async (req, res) => {
     try {
         const db = await getDb();
-        const courses = await db.all('SELECT * FROM courses');
-        
+        const courses = await db.all('SELECT * FROM courses ORDER BY display_order ASC');
         let enrollments = [];
         let completedLessons = new Set();
         if (req.user && req.user.role === 'student') {
@@ -150,45 +166,33 @@ app.get('/api/courses', optionalToken, async (req, res) => {
             completedLessons = new Set(progress.map(p => p.lesson_id));
             enrollments = await db.all('SELECT course_id, status, expires_at FROM enrollments WHERE user_id = ?', [req.user.id]);
         }
-        
         const enrollmentMap = {};
         enrollments.forEach(e => enrollmentMap[e.course_id] = { status: e.status, expires_at: e.expires_at });
-        
         for (let course of courses) {
-            if (!req.user) {
-                course.enrollmentStatus = 'none';
-                course.isExpired = false;
-            } else if (req.user.role !== 'student') {
-                course.enrollmentStatus = 'approved';
-                course.isExpired = false;
-            } else {
+            if (!req.user) { course.enrollmentStatus = 'none'; course.isExpired = false; }
+            else if (req.user.role !== 'student') { course.enrollmentStatus = 'approved'; course.isExpired = false; }
+            else {
                 const enr = enrollmentMap[course.id];
                 if (enr) {
                     course.enrollmentStatus = enr.status;
                     course.expiresAt = enr.expires_at;
-                    if (enr.expires_at && new Date(enr.expires_at) < new Date()) {
-                        course.isExpired = true;
-                    } else {
-                        course.isExpired = false;
-                    }
-                } else {
-                    course.enrollmentStatus = 'none';
-                    course.isExpired = false;
-                }
+                    course.isExpired = enr.expires_at && new Date(enr.expires_at) < new Date();
+                } else { course.enrollmentStatus = 'none'; course.isExpired = false; }
             }
-            
-            const lessons = await db.all('SELECT * FROM lessons WHERE course_id = ?', [course.id]);
+            const lessons = await db.all('SELECT * FROM lessons WHERE course_id = ? ORDER BY sort_order ASC', [course.id]);
             let completedCount = 0;
             course.lessons = lessons.map(l => {
                 const isCompleted = completedLessons.has(l.id);
                 if (isCompleted) completedCount++;
                 return { ...l, isCompleted };
             });
-            
             course.progressPercentage = course.lessons.length > 0 ? Math.round((completedCount / course.lessons.length) * 100) : 0;
-            course.simulations = await db.all('SELECT * FROM simulations WHERE course_id = ?', [course.id]);
+            const sims = await db.all('SELECT * FROM simulations WHERE course_id = ?', [course.id]);
+            const extraSims = await db.all(`SELECT s.* FROM simulations s JOIN simulation_courses sc ON s.id = sc.simulation_id WHERE sc.course_id = ?`, [course.id]);
+            const allSimIds = new Set(sims.map(s => s.id));
+            extraSims.forEach(s => { if (!allSimIds.has(s.id)) sims.push(s); });
+            course.simulations = sims;
         }
-        
         res.json(courses);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch courses' });
@@ -265,7 +269,9 @@ app.post('/api/courses', authenticateToken, isAdmin, async (req, res) => {
     try {
         const db = await getDb();
         const duration = durationDays ? parseInt(durationDays) : null;
-        await db.run('INSERT INTO courses (title, description, duration_days) VALUES (?, ?, ?)', [title, description, duration]);
+        const maxOrder = await db.get('SELECT MAX(display_order) as mo FROM courses');
+        const order = (maxOrder.mo || 0) + 1;
+        await db.run('INSERT INTO courses (title, description, duration_days, display_order) VALUES (?, ?, ?, ?)', [title, description, duration, order]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to create course' });
@@ -324,10 +330,31 @@ app.post('/api/courses/:id/lessons', authenticateToken, isAdmin, async (req, res
     const { title, videoId, documentUrl } = req.body;
     try {
         const db = await getDb();
-        await db.run('INSERT INTO lessons (course_id, title, video_id, document_url) VALUES (?, ?, ?, ?)', [courseId, title, videoId, documentUrl || null]);
+        const maxOrder = await db.get('SELECT MAX(sort_order) as mo FROM lessons WHERE course_id = ?', [courseId]);
+        const order = (maxOrder.mo || 0) + 1;
+        await db.run('INSERT INTO lessons (course_id, title, video_id, document_url, sort_order) VALUES (?, ?, ?, ?, ?)', [courseId, title, videoId, documentUrl || null, order]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to add lesson' });
+    }
+});
+
+app.put('/api/lessons/:id/order', authenticateToken, isAdmin, async (req, res) => {
+    const { direction } = req.body; // 'up' or 'down'
+    try {
+        const db = await getDb();
+        const lesson = await db.get('SELECT * FROM lessons WHERE id = ?', [req.params.id]);
+        if (!lesson) return res.status(404).json({ error: 'Not found' });
+        const siblings = await db.all('SELECT * FROM lessons WHERE course_id = ? ORDER BY sort_order ASC', [lesson.course_id]);
+        const idx = siblings.findIndex(l => l.id === lesson.id);
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= siblings.length) return res.json({ success: true });
+        const swap = siblings[swapIdx];
+        await db.run('UPDATE lessons SET sort_order = ? WHERE id = ?', [swap.sort_order, lesson.id]);
+        await db.run('UPDATE lessons SET sort_order = ? WHERE id = ?', [lesson.sort_order, swap.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to reorder' });
     }
 });
 
@@ -345,10 +372,18 @@ app.post('/api/lessons/:id/complete', authenticateToken, async (req, res) => {
 
 app.post('/api/courses/:id/simulations', authenticateToken, isAdmin, async (req, res) => {
     const courseId = req.params.id;
-    const { title, fileUrl } = req.body;
+    const { title, fileUrl, teacherTag, extraCourseIds } = req.body;
     try {
         const db = await getDb();
-        await db.run('INSERT INTO simulations (course_id, title, file_url) VALUES (?, ?, ?)', [courseId, title, fileUrl]);
+        const result = await db.run('INSERT INTO simulations (course_id, title, file_url, teacher_tag) VALUES (?, ?, ?, ?)', [courseId, title, fileUrl, teacherTag || null]);
+        const simId = result.lastID;
+        if (Array.isArray(extraCourseIds)) {
+            for (const cid of extraCourseIds) {
+                if (parseInt(cid) !== parseInt(courseId)) {
+                    await db.run('INSERT OR IGNORE INTO simulation_courses (simulation_id, course_id) VALUES (?, ?)', [simId, cid]);
+                }
+            }
+        }
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to add simulation' });
@@ -373,14 +408,26 @@ app.put('/api/admin/password', authenticateToken, isAdmin, async (req, res) => {
 });
 
 app.put('/api/courses/:id', authenticateToken, isAdmin, async (req, res) => {
-    const { title, description, durationDays } = req.body;
+    const { title, description, durationDays, coverUrl } = req.body;
     try {
         const db = await getDb();
         const duration = durationDays ? parseInt(durationDays) : null;
-        await db.run('UPDATE courses SET title = ?, description = ?, duration_days = ? WHERE id = ?', [title, description, duration, req.params.id]);
+        await db.run('UPDATE courses SET title = ?, description = ?, duration_days = ?, cover_url = COALESCE(?, cover_url) WHERE id = ?', [title, description, duration, coverUrl || null, req.params.id]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to update course' });
+    }
+});
+
+app.post('/api/courses/:id/cover', authenticateToken, isAdmin, uploadImage.single('cover'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    const url = `/uploads/covers/${req.file.filename}`;
+    try {
+        const db = await getDb();
+        await db.run('UPDATE courses SET cover_url = ? WHERE id = ?', [url, req.params.id]);
+        res.json({ success: true, url });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update cover' });
     }
 });
 
@@ -409,6 +456,26 @@ app.put('/api/lessons/:id', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
+app.put('/api/simulations/:id', authenticateToken, isAdmin, async (req, res) => {
+    const { title, fileUrl, teacherTag, extraCourseIds } = req.body;
+    try {
+        const db = await getDb();
+        await db.run('UPDATE simulations SET title = ?, file_url = ?, teacher_tag = ? WHERE id = ?', [title, fileUrl, teacherTag || null, req.params.id]);
+        await db.run('DELETE FROM simulation_courses WHERE simulation_id = ?', [req.params.id]);
+        if (Array.isArray(extraCourseIds)) {
+            const sim = await db.get('SELECT course_id FROM simulations WHERE id = ?', [req.params.id]);
+            for (const cid of extraCourseIds) {
+                if (sim && parseInt(cid) !== parseInt(sim.course_id)) {
+                    await db.run('INSERT OR IGNORE INTO simulation_courses (simulation_id, course_id) VALUES (?, ?)', [req.params.id, cid]);
+                }
+            }
+        }
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: 'Failed to update simulation' });
+    }
+});
+
 app.delete('/api/lessons/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const db = await getDb();
@@ -423,10 +490,144 @@ app.delete('/api/lessons/:id', authenticateToken, isAdmin, async (req, res) => {
 app.delete('/api/simulations/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const db = await getDb();
+        await db.run('DELETE FROM simulation_courses WHERE simulation_id = ?', [req.params.id]);
+        await db.run('DELETE FROM simulation_tag_map WHERE simulation_id = ?', [req.params.id]);
+        await db.run('DELETE FROM teacher_sim_enrollments WHERE simulation_id = ?', [req.params.id]);
+        await db.run('DELETE FROM package_simulations WHERE simulation_id = ?', [req.params.id]);
         await db.run('DELETE FROM simulations WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete simulation' });
+    }
+});
+
+// --- PACKAGES API ---
+app.get('/api/packages', async (req, res) => {
+    try {
+        const db = await getDb();
+        const packages = await db.all('SELECT * FROM packages WHERE is_active = 1 ORDER BY display_order ASC');
+        for (const pkg of packages) {
+            pkg.courses = await db.all(`SELECT c.* FROM courses c JOIN package_courses pc ON c.id = pc.course_id WHERE pc.package_id = ?`, [pkg.id]);
+            pkg.simulations = await db.all(`SELECT s.* FROM simulations s JOIN package_simulations ps ON s.id = ps.simulation_id WHERE ps.package_id = ?`, [pkg.id]);
+        }
+        res.json(packages);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch packages' });
+    }
+});
+
+app.get('/api/admin/packages', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const db = await getDb();
+        const packages = await db.all('SELECT * FROM packages ORDER BY display_order ASC');
+        for (const pkg of packages) {
+            pkg.courses = await db.all(`SELECT c.* FROM courses c JOIN package_courses pc ON c.id = pc.course_id WHERE pc.package_id = ?`, [pkg.id]);
+            pkg.simulations = await db.all(`SELECT s.* FROM simulations s JOIN package_simulations ps ON s.id = ps.simulation_id WHERE ps.package_id = ?`, [pkg.id]);
+        }
+        res.json(packages);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch packages' });
+    }
+});
+
+app.post('/api/packages', authenticateToken, isAdmin, async (req, res) => {
+    const { name, description, price, originalPrice, courseIds, simulationIds } = req.body;
+    try {
+        const db = await getDb();
+        const maxOrder = await db.get('SELECT MAX(display_order) as mo FROM packages');
+        const order = (maxOrder.mo || 0) + 1;
+        const r = await db.run('INSERT INTO packages (name, description, price, original_price, display_order) VALUES (?, ?, ?, ?, ?)', [name, description, price || 0, originalPrice || 0, order]);
+        const pkgId = r.lastID;
+        if (Array.isArray(courseIds)) for (const cid of courseIds) await db.run('INSERT OR IGNORE INTO package_courses (package_id, course_id) VALUES (?, ?)', [pkgId, cid]);
+        if (Array.isArray(simulationIds)) for (const sid of simulationIds) await db.run('INSERT OR IGNORE INTO package_simulations (package_id, simulation_id) VALUES (?, ?)', [pkgId, sid]);
+        res.json({ success: true, id: pkgId });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create package' });
+    }
+});
+
+app.put('/api/packages/:id', authenticateToken, isAdmin, async (req, res) => {
+    const { name, description, price, originalPrice, isActive, courseIds, simulationIds } = req.body;
+    try {
+        const db = await getDb();
+        await db.run('UPDATE packages SET name=?, description=?, price=?, original_price=?, is_active=? WHERE id=?', [name, description, price||0, originalPrice||0, isActive===false?0:1, req.params.id]);
+        await db.run('DELETE FROM package_courses WHERE package_id = ?', [req.params.id]);
+        await db.run('DELETE FROM package_simulations WHERE package_id = ?', [req.params.id]);
+        if (Array.isArray(courseIds)) for (const cid of courseIds) await db.run('INSERT OR IGNORE INTO package_courses (package_id, course_id) VALUES (?, ?)', [req.params.id, cid]);
+        if (Array.isArray(simulationIds)) for (const sid of simulationIds) await db.run('INSERT OR IGNORE INTO package_simulations (package_id, simulation_id) VALUES (?, ?)', [req.params.id, sid]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update package' });
+    }
+});
+
+app.post('/api/packages/:id/cover', authenticateToken, isAdmin, uploadImage.single('cover'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    const url = `/uploads/covers/${req.file.filename}`;
+    try {
+        const db = await getDb();
+        await db.run('UPDATE packages SET cover_url = ? WHERE id = ?', [url, req.params.id]);
+        res.json({ success: true, url });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update cover' });
+    }
+});
+
+app.delete('/api/packages/:id', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const db = await getDb();
+        await db.run('DELETE FROM package_courses WHERE package_id = ?', [req.params.id]);
+        await db.run('DELETE FROM package_simulations WHERE package_id = ?', [req.params.id]);
+        await db.run('DELETE FROM packages WHERE id = ?', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete package' });
+    }
+});
+
+// --- TEACHER SIM ENROLLMENTS ---
+app.get('/api/teacher/simulations', authenticateToken, isTeacher, async (req, res) => {
+    try {
+        const db = await getDb();
+        const enrolled = await db.all(`SELECT s.*, tse.enrolled_at FROM simulations s JOIN teacher_sim_enrollments tse ON s.id = tse.simulation_id WHERE tse.teacher_id = ?`, [req.user.id]);
+        res.json(enrolled);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch' });
+    }
+});
+
+app.post('/api/teacher/simulations/:id/enroll', authenticateToken, isTeacher, async (req, res) => {
+    try {
+        const db = await getDb();
+        await db.run('INSERT OR IGNORE INTO teacher_sim_enrollments (teacher_id, simulation_id) VALUES (?, ?)', [req.user.id, req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to enroll' });
+    }
+});
+
+app.delete('/api/teacher/simulations/:id/enroll', authenticateToken, isTeacher, async (req, res) => {
+    try {
+        const db = await getDb();
+        await db.run('DELETE FROM teacher_sim_enrollments WHERE teacher_id = ? AND simulation_id = ?', [req.user.id, req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to unenroll' });
+    }
+});
+
+// Lessons sorted by sort_order (for courses API)
+app.get('/api/simulations/all', async (req, res) => {
+    try {
+        const db = await getDb();
+        const sims = await db.all('SELECT * FROM simulations ORDER BY title ASC');
+        for (const s of sims) {
+            const extra = await db.all('SELECT course_id FROM simulation_courses WHERE simulation_id = ?', [s.id]);
+            s.extraCourseIds = extra.map(e => e.course_id);
+        }
+        res.json(sims);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed' });
     }
 });
 

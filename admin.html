@@ -283,11 +283,7 @@
 
         window.editCourse = async function(id) {
             const course = courses.find(c => c.id === id);
-            const title = prompt('ชื่อคอร์ส:', course.title); if(title === null) return;
-            const description = prompt('รายละเอียด:', course.description); if(description === null) return;
-            const durationDays = prompt('อายุคอร์ส (วัน):', course.duration_days || ''); if(durationDays === null) return;
-            await fetch(`${API_URL}/courses/${id}`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ title, description, durationDays }) });
-            fetchCourses();
+            openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
         };
 
         window.deleteCourse = async function(id) {
@@ -427,5 +423,114 @@
             });
         });
     </script>
+<script>
+// Modal handling utilities
+let currentEdit = {};
+function openModal(type, data) {
+    currentEdit = { type, id: data.id, parentId: data.parentId };
+    const modal = document.getElementById('edit-modal');
+    const titleEl = document.getElementById('modal-title');
+    const fieldsContainer = document.getElementById('modal-fields');
+    fieldsContainer.innerHTML = '';
+    if (type === 'course') {
+        titleEl.textContent = 'แก้ไขคอร์สเรียน';
+        fieldsContainer.innerHTML = `
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>ชื่อคอร์ส</label>
+                <input type="text" id="modal-course-title" class="form-control" value="${data.title}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>รายละเอียด</label>
+                <textarea id="modal-course-desc" class="form-control" rows="2" required>${data.description}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>อายุคอร์ส (วัน) (ว่าง = ตลอดชีพ)</label>
+                <input type="number" id="modal-course-duration" class="form-control" value="${data.duration_days || ''}">
+            </div>`;
+    } else if (type === 'lesson') {
+        titleEl.textContent = 'แก้ไขวิดีโอ';
+        fieldsContainer.innerHTML = `
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>ชื่อวิดีโอ</label>
+                <input type="text" id="modal-lesson-title" class="form-control" value="${data.title}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>รหัส YouTube (หรือ URL)</label>
+                <input type="text" id="modal-lesson-videoId" class="form-control" value="${data.video_id}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>ลิงก์เอกสาร (optional)</label>
+                <input type="text" id="modal-lesson-docUrl" class="form-control" value="${data.document_url || ''}">
+            </div>`;
+    } else if (type === 'simulation') {
+        titleEl.textContent = 'แก้ไขโปรแกรมจำลอง';
+        fieldsContainer.innerHTML = `
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>ชื่อโปรแกรมจำลอง</label>
+                <input type="text" id="modal-sim-title" class="form-control" value="${data.title}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>URL ไฟล์</label>
+                <input type="text" id="modal-sim-url" class="form-control" value="${data.file_url}" required>
+            </div>`;
+    }
+    modal.style.display = 'flex';
+}
+function closeModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    currentEdit = {};
+}
+document.getElementById('modal-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { type, id } = currentEdit;
+    if (type === 'course') {
+        const title = document.getElementById('modal-course-title').value.trim();
+        const description = document.getElementById('modal-course-desc').value.trim();
+        const durationDays = document.getElementById('modal-course-duration').value;
+        await fetch(`${API_URL}/courses/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ title, description, durationDays })
+        });
+    } else if (type === 'lesson') {
+        const title = document.getElementById('modal-lesson-title').value.trim();
+        let videoId = document.getElementById('modal-lesson-videoId').value.trim();
+        const documentUrl = document.getElementById('modal-lesson-docUrl').value.trim();
+        const match = videoId.match(/^.*(youtu.be\/|v\/|u\/\w\//|embed\/|watch\?v=|\&v=)([^#\&?]*).*/);
+        if (match && match[2].length === 11) videoId = match[2];
+        await fetch(`${API_URL}/lessons/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ title, videoId, documentUrl })
+        });
+    } else if (type === 'simulation') {
+        const title = document.getElementById('modal-sim-title').value.trim();
+        const fileUrl = document.getElementById('modal-sim-url').value.trim();
+        await fetch(`${API_URL}/simulations/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ title, fileUrl })
+        });
+    }
+    closeModal();
+    fetchCourses();
+});
+// Override edit functions to use modal
+window.editCourse = async function(id) {
+    const course = courses.find(c => c.id === id);
+    openModal('course', { id: course.id, title: course.title, description: course.description, duration_days: course.duration_days });
+};
+window.editLesson = async function(id, cId) {
+    const course = courses.find(c => c.id === cId);
+    const lesson = course.lessons.find(l => l.id === id);
+    openModal('lesson', { id: lesson.id, title: lesson.title, video_id: lesson.video_id, document_url: lesson.document_url });
+};
+window.editSim = async function(id, cId) {
+    const course = courses.find(c => c.id === cId);
+    const sim = course.simulations.find(s => s.id === id);
+    openModal('simulation', { id: sim.id, title: sim.title, file_url: sim.file_url });
+};
+</script>
+
 </body>
 </html>
